@@ -20,10 +20,6 @@ metadata.update_column(column_name="timestamp", sdtype="datetime", datetime_form
 print(metadata)
 metadata.validate()
 
-#synthesizer = CTGANSynthesizer(metadata)
-#synthesizer.fit(df)
-#synthetic_data = synthesizer.sample(num_rows=100)
-
 synthesizer = GaussianCopulaSynthesizer(metadata)
 synthesizer.fit(df)
 synthetic_data = synthesizer.sample(num_rows=100)
