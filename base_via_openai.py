@@ -17,8 +17,6 @@ class UserBehavior:
         self.action_categories = action_categories
 
 
-# TODO: Make it look at a specific e-commerce webpage and extract the possible actions from there.
-# Add those as input to the base prompt
 base_prompt = """
     I am creating synthetic data with the Python SDV library for ecommerce startups.
     I am using OpenAI to create the base data.
