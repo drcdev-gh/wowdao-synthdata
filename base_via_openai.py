@@ -2,7 +2,6 @@ from langchain import LLMChain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.callbacks import StdOutCallbackHandler
-import asyncio
 
 class UserProfile:
     def __init__(self, gender, age_from, age_to, location, interest):
@@ -15,7 +14,6 @@ class UserProfile:
 class UserBehavior:
     def __init__(self, action_categories):
         self.action_categories = action_categories
-
 
 base_prompt = """
     I am creating synthetic data with the Python SDV library for ecommerce startups.
@@ -33,6 +31,7 @@ base_prompt = """
     - Location: {location}
     - Interest: {interest}
 
+    Please think carefully how users with different profiles interact with the platform when making e-commerce purchases.
     Only answer with the JSON.
 
     Use the following JSON snippet as guideline for your output:
