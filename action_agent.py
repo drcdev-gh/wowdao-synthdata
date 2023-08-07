@@ -17,12 +17,30 @@ class ActionType(Enum):
     CLICK_RESULT      = 2
     CLICK_RECOMMENDED = 3
     CLICK_FREQ_BOUGHT = 4
+    CHECKOUT          = 5
 
 class Action:
     def __init__(self, action_type, context, target_url):
         self.action_type = action_type
         self.context     = context
         self.target_url  = target_url
+
+class Scraper:
+    def __init__(self, scraper_name):
+        self.scraper_name = scraper_name
+
+    def scrape_page_into_possible_actions(self, page):
+        return []
+
+class Agent:
+    def __init__(self, user_profile, initial_goal, scraper):
+        self.user_profile    = user_profile
+        self.initial_goal    = initial_goal
+        self.actions_history = []
+        self.scraper         = scraper
+
+    def execute(self):
+        pass
 
 base_prompt = """
     I am creating synthetic data with the Python SDV library for ecommerce startups.
