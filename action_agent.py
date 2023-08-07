@@ -14,12 +14,15 @@ class UserProfile:
         self.location   = location
         self.interest   = interest
 
+class PageType(Enum):
+    SEARCH_RESULTS  = 1
+    PRODUCT_DETAILS = 2
+
 class ActionType(Enum):
     QUERY_GOAL        = 1
     CLICK_RESULT      = 2
     CLICK_RECOMMENDED = 3
-    CLICK_FREQ_BOUGHT = 4
-    CHECKOUT          = 5
+    CHECKOUT          = 4
 
 class Action:
     def __init__(self, action_type, context, target_url):
@@ -59,7 +62,28 @@ class AmazonScraper(Scraper):
     def get_initial_actions(self, goal):
         return [Action(ActionType.QUERY_GOAL, goal, self.generate_amazon_search_url(goal))]
 
+    def determine_page_type(self, page):
+        return PageType.SEARCH_RESULTS
+        #return PageType.PRODUCT_DETAILS
+
     def scrape_page_into_possible_actions(self, page):
+        actions = []
+        page_type = self.determine_page_type(page)
+        if page_type is PageType.SEARCH_RESULTS:
+            actions.append(self.extract_products_from_search_page(page))
+        elif page_type is PageType.PRODUCT_DETAILS:
+            actions.append(self.extract_recommendations_from_product_details(page))
+            actions.append(self.extract_checkout_from_product_details(page))
+
+        return actions
+
+    def extract_products_from_search_page(self, page):
+        return []
+
+    def extract_recommendations_from_product_details(self, page):
+        return []
+
+    def extract_checkout_from_product_details(self, page):
         return []
 
     def generate_amazon_search_url(self, search_query):
