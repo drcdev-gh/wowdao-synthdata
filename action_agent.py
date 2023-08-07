@@ -35,6 +35,13 @@ class Action:
             'context': self.context,
         }, indent=4)
 
+    def array_to_json(array):
+        options = ""
+        for action in array:
+            options += action.to_json() + "\n"
+
+        return options
+
 class Scraper:
     def __init__(self, scraper_name):
         self.scraper_name = scraper_name
@@ -46,15 +53,16 @@ class Scraper:
         return []
 
 class AmazonScraper(Scraper):
-    super().__init__("Amazon")
+    def __init__(self):
+        super().__init__("Amazon")
 
     def get_initial_actions(self, goal):
-        return Action(ActionType.QUERY_GOAL, goal, self.generate_amazon_search_url(goal))
+        return [Action(ActionType.QUERY_GOAL, goal, self.generate_amazon_search_url(goal))]
 
     def scrape_page_into_possible_actions(self, page):
         return []
 
-    def generate_amazon_search_url(search_query):
+    def generate_amazon_search_url(self, search_query):
         base_url = "https://www.amazon.com/s"
         query_params = { 'k': search_query }
         encoded_params = '&'.join([f"{key}={value}" for key, value in query_params.items()])
@@ -70,19 +78,27 @@ class Agent:
         self.scraper               = scraper
 
     def execute(self):
-        if len(self.next_possible_actions) == 0:
-            self.next_possible_actions = self.scraper.get_initial_actions()
-        else:
-            while True:
-                next_action = self.choose_from_next_actions()
+        if len(self.actions_history) == 0:
+            self.next_possible_actions = self.scraper.get_initial_actions(self.initial_goal)
+
+        while True:
+            next_action = self.choose_from_next_actions()
+
+            if next_action is not None:
                 self.actions_history.append(next_action)
 
-                if next_action is not None and next_action.action_type is not ActionType.CHECKOUT:
-                    self.next_possible_actions = self.scraper.scrape_page_into_possible_actions(next_action.target_url)
-                else:
-                    break
+            if next_action is not None and next_action.action_type is not ActionType.CHECKOUT:
+                self.next_possible_actions = self.scraper.scrape_page_into_possible_actions(next_action.target_url)
+            else:
+                break
 
     def choose_from_next_actions(self):
+        # Temporary helper for testing
+        if len(self.next_possible_actions) == 1:
+            return self.next_possible_actions[0]
+        else:
+            return None
+
         # TODO: Add compressed user history?
         base_prompt = """
         I am trying to create synthetic data with LLMs for ecommerce startups.
@@ -102,9 +118,7 @@ class Agent:
         prompt = PromptTemplate.from_template(base_prompt)
         chain  = LLMChain(llm=OpenAI(max_tokens=-1), prompt=prompt, verbose=1)
 
-        options = ""
-        for action in self.next_possible_actions:
-            options += action.to_json() + "\n"
+        options = Action.array_to_json(self.next_possible_actions)
 
         result = chain.run(
                 {"goal":self.initial_goal, "options":options,
@@ -123,3 +137,12 @@ class Agent:
                 return action
 
         return None
+
+###
+
+scraper = AmazonScraper()
+up      = UserProfile("Male", "18", "35", "United States", "Hiking")
+agent   = Agent(up, "hiking shoes", scraper)
+agent.execute()
+
+print(Action.array_to_json(agent.actions_history))
