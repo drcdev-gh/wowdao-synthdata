@@ -2,6 +2,7 @@ from langchain import LLMChain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.callbacks import StdOutCallbackHandler
+from enum import Enum
 
 class UserProfile:
     def __init__(self, gender, age_from, age_to, location, interest):
@@ -11,9 +12,17 @@ class UserProfile:
         self.location   = location
         self.interest   = interest
 
-class UserBehavior:
-    def __init__(self, action_categories):
-        self.action_categories = action_categories
+class ActionType(Enum):
+    QUERY             = 1
+    CLICK_RESULT      = 2
+    CLICK_RECOMMENDED = 3
+    CLICK_FREQ_BOUGHT = 4
+
+class Action:
+    def __init__(self, action_type, context, target_url):
+        self.action_type = action_type
+        self.context     = context
+        self.target_url  = target_url
 
 base_prompt = """
     I am creating synthetic data with the Python SDV library for ecommerce startups.
@@ -48,23 +57,18 @@ base_prompt = """
     "product_2": "prod_125"
 """
 
-up = UserProfile("male", "18", "27", "United States", "Hiking")
-ub = UserBehavior(["news reading", "search engine browsing", "reviews", "social media", "browsing", "buying"])
-
+up     = UserProfile("male", "18", "27", "United States", "Hiking")
 prompt = PromptTemplate.from_template(base_prompt)
 
 chain = LLMChain(
     llm=OpenAI(max_tokens=-1),
-    prompt=prompt
+    prompt=prompt,
+    verbose=1
 )
-
-handler = StdOutCallbackHandler()
 
 result = chain.run(
         {"num_actions":"25", "user_journey":"Buy hiking boots", "action_categories":", ".join(ub.action_categories),
         "gender":up.gender, "age_from":up.age_from, "age_to":up.age_to, "location":up.location, "interest":up.interest},
-        callbacks=[handler]
 )
-
 
 print(result)
