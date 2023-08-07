@@ -27,7 +27,7 @@ def browse_url(url, query, save_filename):
 
     soup = BeautifulSoup(response_content, "lxml")
     search_results = soup.find_all(attrs={"data-component-type": "s-search-result"})
-    for result in search_results:
+    for index, result in enumerate(search_results, start=1):
         # Extract HREF URL
         href_element = result.find("a", class_="a-link-normal")
         if href_element:
@@ -35,7 +35,7 @@ def browse_url(url, query, save_filename):
             full_url = "https://amazon.com" + href_url
         else:
             full_url = None
-        
+
         # Extract escaped text (title)
         title_element = result.find("span", class_="a-size-base-plus")
         escaped_text = title_element.get_text() if title_element else None
