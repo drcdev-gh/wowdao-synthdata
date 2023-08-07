@@ -3,6 +3,7 @@ from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.callbacks import StdOutCallbackHandler
 from enum import Enum
+import uuid
 
 class UserProfile:
     def __init__(self, gender, age_from, age_to, location, interest):
@@ -21,6 +22,7 @@ class ActionType(Enum):
 
 class Action:
     def __init__(self, action_type, context, target_url):
+        self.action_id   = uuid.uuid1()
         self.action_type = action_type
         self.context     = context
         self.target_url  = target_url
@@ -29,64 +31,80 @@ class Scraper:
     def __init__(self, scraper_name):
         self.scraper_name = scraper_name
 
+    def get_initial_actions(self):
+        return []
+
     def scrape_page_into_possible_actions(self, page):
         return []
 
 class Agent:
     def __init__(self, user_profile, initial_goal, scraper):
-        self.user_profile    = user_profile
-        self.initial_goal    = initial_goal
-        self.actions_history = []
-        self.scraper         = scraper
+        self.user_profile          = user_profile
+        self.initial_goal          = initial_goal
+        self.actions_history       = []
+        self.next_possible_actions = []
+        self.scraper               = scraper
 
     def execute(self):
-        pass
+        if len(self.next_possible_actions) == 0:
+            self.next_possible_actions = self.scraper.get_initial_actions()
+        else:
+            while True:
+                next_action = self.choose_from_next_actions()
+                if next_action is not None and next_action.action_type is not ActionType.CHECKOUT:
+                    self.next_possible_actions = self.scraper.scrape_page_into_possible_actions(next_action.target_url)
+                else:
+                    break
 
-base_prompt = """
-    I am creating synthetic data with the Python SDV library for ecommerce startups.
-    I am using OpenAI to create the base data.
+    def choose_from_next_actions(self):
+        base_prompt = """
+        I am trying to create synthetic data with LLMs for ecommerce startups.
+        More specifically, I am telling you to act as a consumer with this goal: {goal}
+        You are currently browsing the ecommerce webpage and are presented with these options:
+        {options}
 
-    For the following query, please generate a base dataset of {num_actions} actions that are part of a coherent user journey and print all {num_actions} actions in JSON format.
-    Do not use lists in the format, instead use a postfix like "_1" or "_2" for lists.
+        The actions should be taken from the point of view of a user with the following profile:
+        - Gender: {gender}
+        - Age Range: {age_from} - {age_to}
+        - Location: {location}
+        - Interest: {interest}
 
-    The actions should cover the user journey "{user_journey}".
-    Include the following action categories: {action_categories}
+        Please think carefully how users with different profiles interact with the platform when making e-commerce purchases.
+        Tell me which option you are taking by responding with the corresponding action ID only.
+        """
+        prompt = PromptTemplate.from_template(base_prompt)
+        chain  = LLMChain(llm=OpenAI(max_tokens=-1), prompt=prompt, verbose=1)
 
-    The actions should be taken from the point of view of a user with the following profile:
-    - Gender: {gender}
-    - Age Range: {age_from} - {age_to}
-    - Location: {location}
-    - Interest: {interest}
+        result = chain.run(
+                {"num_actions":"25", "goal":"Buy hiking boots",
+                "gender":self.user_profile.gender,
+                "age_from":self.user_profile.age_from, "age_to":self.user_profile.age_to,
+                "location":self.user_profile.location, "interest":self.user_profile.interest})
 
-    Please think carefully how users with different profiles interact with the platform when making e-commerce purchases.
-    Only answer with the JSON.
+        return self.find_next_action_by_id(result)
 
-    Use the following JSON snippet as guideline for your output:
-    "index": 0,
-    "action": "search",
-    "timestamp": "2023-08-01T10:00:00",
-    "user_id": "user_1",
-    "query": "hiking boots",
-    "filters_1": "brand:North Face",
-    "filters_2": "size:10",
-    "product_id": "prod_123",
-    "sort_option": "price_low_to_high",
-    "product_1": "prod_124",
-    "product_2": "prod_125"
-"""
+    def find_next_action_by_id(self, action_id):
+        if len(self.next_possible_actions) == 0:
+            return None
 
-up     = UserProfile("male", "18", "27", "United States", "Hiking")
-prompt = PromptTemplate.from_template(base_prompt)
+        for action in self.next_possible_actions:
+            if action.action_id == action_id:
+                return action
 
-chain = LLMChain(
-    llm=OpenAI(max_tokens=-1),
-    prompt=prompt,
-    verbose=1
-)
+        return None
 
-result = chain.run(
-        {"num_actions":"25", "user_journey":"Buy hiking boots", "action_categories":", ".join(ub.action_categories),
-        "gender":up.gender, "age_from":up.age_from, "age_to":up.age_to, "location":up.location, "interest":up.interest},
-)
-
-print(result)
+#up     = UserProfile("male", "18", "27", "United States", "Hiking")
+#prompt = PromptTemplate.from_template(base_prompt)
+#
+#chain = LLMChain(
+#    llm=OpenAI(max_tokens=-1),
+#    prompt=prompt,
+#    verbose=1
+#)
+#
+#result = chain.run(
+#        {"num_actions":"25", "user_journey":"Buy hiking boots", "action_categories":", ".join(ub.action_categories),
+#        "gender":up.gender, "age_from":up.age_from, "age_to":up.age_to, "location":up.location, "interest":up.interest},
+#)
+#
+#print(result)
