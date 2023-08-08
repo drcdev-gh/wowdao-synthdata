@@ -185,8 +185,29 @@ class AmazonScraper(Scraper):
         return str
 
     def extract_recommendations_from_product_details(self, page):
-        # TODO: implement - copy/paste from amazon_scrape_test
-        return []
+        content  = self.scrape_and_cache(page)
+        soup     = BeautifulSoup(content, "lxml")
+
+        recommendations = []
+        product_elements = soup.find_all('li', class_='a-carousel-card')
+
+        for product_element in product_elements:
+            try:
+                product_title = product_element.find('a', class_='a-link-normal')['title']
+                product_url = product_element.find('a', class_='a-link-normal')['href']
+                full_url = "https://amazon.com" + product_url
+                product_price = product_element.find('span', class_='a-size-medium').text
+
+                product_description = None
+
+                if product_title is not None and product_url is not None:
+                    product_description = self.add_to_str(product_description, "Product Title: ", product_title)
+                    product_description = self.add_to_str(product_description, "Product Price", product_price)
+                    recommendations.append(Action(ActionType.CLICK_RECOMMENDED, product_description, full_url))
+            except:
+                continue
+
+        return recommendations
 
     def extract_checkout_from_product_details(self, page):
         content  = self.scrape_and_cache(page)
@@ -207,6 +228,7 @@ class AmazonScraper(Scraper):
         if feature_bullets_div:
             bullet_points = feature_bullets_div.find_all("span", class_="a-list-item")
 
+            # TODO: make sure this is working also if there's no bullet points
             bullet_points = ""
             for bullet_point in bullet_points:
                 if bullet_point.get_text() != "":
@@ -263,7 +285,7 @@ class Agent:
             next_action = self.choose_from_next_actions()
 
             if next_action is not None:
-                #print(next_action.to_json())
+                print(next_action.to_json())
                 self.actions_history.append(next_action)
 
             if next_action is not None and next_action.action_type is not ActionType.CHECKOUT:
