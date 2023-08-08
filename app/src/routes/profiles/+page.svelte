@@ -1,5 +1,5 @@
 <script>
-  let gender = '';
+	let gender = '';
 </script>
 
 <svelte:head>

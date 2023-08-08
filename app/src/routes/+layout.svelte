@@ -1,15 +1,17 @@
 <script>
 	import '../app.css';
 	import Header from './Header.svelte';
-	import './styles.css';
+	import { SvelteUIProvider } from '@svelteuidev/core';
 </script>
 
-<div class="app">
-	<Header />
-	<main>
-		<slot />
-	</main>
-</div>
+<SvelteUIProvider>
+	<div class="app">
+		<Header />
+		<main>
+			<slot />
+		</main>
+	</div>
+</SvelteUIProvider>
 
 <style>
 	.app {
