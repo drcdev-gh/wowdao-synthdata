@@ -317,6 +317,9 @@ class Agent:
         You are currently browsing the ecommerce webpage and are presented with these options:
         {options}
 
+        You have previously taken the following actions. You want to choose the best option to buy (with a BUY_NOW action) after a maximum of {steps} steps:
+        {previous_actions}
+
         The actions should be taken from the point of view of a user with the following profile:
         - Gender: {gender}
         - Age Range: {age_from} - {age_to}
@@ -329,10 +332,12 @@ class Agent:
         prompt = PromptTemplate.from_template(base_prompt)
         chain  = LLMChain(llm=OpenAI(max_tokens=-1), prompt=prompt, verbose=1)
 
-        options = Action.array_to_json(self.next_possible_actions)
+        options          = Action.array_to_json(self.next_possible_actions)
+        previous_actions = Action.array_to_json(self.actions_history)
 
         result = chain.run(
                 {"goal":self.initial_goal, "options":options,
+                "steps":"10","previous_actions":previous_actions,
                 "gender":self.user_profile.gender,
                 "age_from":self.user_profile.age_from, "age_to":self.user_profile.age_to,
                 "location":self.user_profile.location, "interest":self.user_profile.interest})
