@@ -3,8 +3,8 @@
 </script>
 
 <svelte:head>
-	<title>Agents</title>
-	<meta name="description" content="Agents list." />
+	<title>Profiles</title>
+	<meta name="description" content="Profile list." />
 </svelte:head>
 
 <section class="flex flex-col justify-center grow">

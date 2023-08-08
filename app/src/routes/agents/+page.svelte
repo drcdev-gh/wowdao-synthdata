@@ -4,6 +4,5 @@
 </svelte:head>
 
 <section class="flex flex-col justify-center grow">
-	<h1>Setup your User Profile</h1>
-	<div />
+	<h1>List of agents</h1>
 </section>
