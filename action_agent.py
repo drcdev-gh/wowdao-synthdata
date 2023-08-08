@@ -185,9 +185,11 @@ class AmazonScraper(Scraper):
         return str
 
     def extract_recommendations_from_product_details(self, page):
+        # TODO: implement - copy/paste from amazon_scrape_test
         return []
 
     def extract_checkout_from_product_details(self, page):
+        # TODO: implement - copy/paste from amazon_scrape_test
         return []
 
     def generate_amazon_search_url(self, search_query):
@@ -223,7 +225,7 @@ class Agent:
                 break
 
     def choose_from_next_actions(self):
-        # Temporary helper for testing
+        # Temporary helper for testing / TODO: remove
         if len(self.next_possible_actions) >= 1:
             return self.next_possible_actions[0]
         else:
