@@ -1,14 +1,12 @@
 from langchain import LLMChain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
-from langchain.callbacks import StdOutCallbackHandler
 from enum import Enum
 import uuid
 import json
 import sqlite3
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 
 class UserProfile:
     def __init__(self, gender, age_from, age_to, location, interest):
