@@ -296,7 +296,7 @@ class Agent:
             next_action = self.choose_from_next_actions()
 
             if next_action is not None:
-                print(next_action.to_json())
+                #print(next_action.to_json())
                 self.actions_history.append(next_action)
 
             if next_action is not None and next_action.action_type is not ActionType.BUY_NOW:
@@ -330,7 +330,7 @@ class Agent:
         Tell me which option you are taking by responding with the corresponding action ID only.
         """
         prompt = PromptTemplate.from_template(base_prompt)
-        chain  = LLMChain(llm=OpenAI(max_tokens=-1), prompt=prompt, verbose=1)
+        chain  = LLMChain(llm=OpenAI(max_tokens=-1), prompt=prompt)#, verbose=1)
 
         options          = Action.array_to_json(self.next_possible_actions)
         previous_actions = Action.array_to_json(self.actions_history)
@@ -361,4 +361,4 @@ up      = UserProfile("Male", "18", "35", "United States", "Hiking")
 agent   = Agent(up, "hiking shoes", scraper)
 agent.execute()
 
-#print(Action.array_to_json(agent.actions_history))
+print(Action.array_to_json(agent.actions_history))
