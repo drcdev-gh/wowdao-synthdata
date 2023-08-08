@@ -12,7 +12,7 @@
 	<h1>
 		<span class="">
 			<picture>
-				<img src={logo} alt="logo"/>
+				<img src={logo} alt="logo" />
 			</picture>
 		</span>
 	</h1>
