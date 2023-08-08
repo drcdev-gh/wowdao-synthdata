@@ -306,11 +306,9 @@ class Agent:
                 break
 
     def choose_from_next_actions(self):
-        # Temporary helper for testing / TODO: remove
         if len(self.next_possible_actions) == 1:
             return self.next_possible_actions[0]
 
-        # TODO: Add compressed user history?
         base_prompt = """
         I am trying to create synthetic data with LLMs for ecommerce startups.
         More specifically, I am telling you to act as a consumer with this goal: {goal}
