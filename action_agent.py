@@ -210,8 +210,8 @@ class AmazonScraper(Scraper):
                 product_description = None
 
                 if product_title is not None and product_url is not None:
-                    product_description = self.add_to_str(product_description, "Product Title: ", product_title)
-                    product_description = self.add_to_str(product_description, "Product Price: ", product_price)
+                    product_description = self.add_to_str(product_description, "Product Title", product_title)
+                    product_description = self.add_to_str(product_description, "Product Price", product_price)
                     recommendations.append(Action(ActionType.CLICK_RECOMMENDED, product_description, full_url))
                     if len(recommendations) >= LIMIT:
                         break
@@ -233,7 +233,7 @@ class AmazonScraper(Scraper):
 
         if product_title_span:
             escaped_title = product_title_span.get_text(strip=True)
-            product_description = self.add_to_str(product_description, "Product Title: ", escaped_title)
+            product_description = self.add_to_str(product_description, "Product Title", escaped_title)
 
         # Extract the bullet points
         if feature_bullets_div:
@@ -244,7 +244,7 @@ class AmazonScraper(Scraper):
             for bullet_point in bullet_points:
                 if bullet_point.get_text() != "":
                     bullet_points += bullet_point.get_text() + "; "
-            product_description = self.add_to_str(product_description, "Product Description: ", bullet_points)
+            product_description = self.add_to_str(product_description, "Product Description", bullet_points)
 
         # Find the span elements with class "a-price-range"
         price_range_spans = soup.find_all("span", class_="a-price-range")
@@ -254,7 +254,7 @@ class AmazonScraper(Scraper):
             price_elements = price_range_span.find_all("span", class_="a-price")
             for price_element in price_elements:
                 price = price_element.find("span", class_="a-offscreen").get_text()
-                product_description = self.add_to_str(product_description, "Price: ", bullet_points)
+                product_description = self.add_to_str(product_description, "Price", bullet_points)
 
         # Find the span element with class "reviewCountTextLinkedHistogram"
         average_review_span = soup.find("span", class_="reviewCountTextLinkedHistogram")
@@ -262,7 +262,7 @@ class AmazonScraper(Scraper):
         if average_review_span:
             title = average_review_span.get("title")
             average_review = title.split(" ")[0] if title else None
-            product_description = self.add_to_str(product_description, "Average Review: ", average_review)
+            product_description = self.add_to_str(product_description, "Average Review", average_review)
 
         # Find the span element with id "acrCustomerReviewText"
         ratings_span = soup.find("span", id="acrCustomerReviewText")
