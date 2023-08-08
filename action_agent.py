@@ -21,10 +21,11 @@ class PageType(Enum):
     PRODUCT_DETAILS = 2
 
 class ActionType(Enum):
-    QUERY_GOAL        = 1
-    CLICK_RESULT      = 2
-    CLICK_RECOMMENDED = 3
-    CHECKOUT          = 4
+    QUERY_GOAL                = 1
+    BACK_TO_SEARCH_RESULTS    = 2
+    CLICK_SEARCH_RESULT       = 3
+    CLICK_RECOMMENDED         = 4
+    BUY_NOW                   = 5
 
 class Action:
     def __init__(self, action_type, context, target_url):
@@ -106,9 +107,11 @@ class Scraper:
 class AmazonScraper(Scraper):
     def __init__(self):
         super().__init__("Amazon")
+        self.search_url = None
 
     def get_initial_actions(self, goal):
-        return [Action(ActionType.QUERY_GOAL, goal, self.generate_amazon_search_url(goal))]
+        self.search_url = self.generate_amazon_search_url(goal)
+        return [Action(ActionType.QUERY_GOAL, goal, self.search_url)]
 
     def determine_page_type(self, page):
         if page.startswith("https://www.amazon.com/s?k"):
@@ -123,10 +126,12 @@ class AmazonScraper(Scraper):
         elif page_type is PageType.PRODUCT_DETAILS:
             actions.extend(self.extract_recommendations_from_product_details(page))
             actions.extend(self.extract_checkout_from_product_details(page))
+            actions.append(Action(ActionType.BACK_TO_SEARCH_RESULTS, "Go back to search results", self.search_url))
 
         return actions
 
     def extract_products_from_search_page(self, page):
+        LIMIT = 5
         products = []
         content  = self.scrape_and_cache(page)
 
@@ -170,8 +175,10 @@ class AmazonScraper(Scraper):
                 product_description = self.add_to_str(product_description, "Star Rating", star_rating)
                 product_description = self.add_to_str(product_description, "List Price", list_price)
 
-                product = Action(ActionType.CLICK_RESULT, product_description, full_url)
+                product = Action(ActionType.CLICK_SEARCH_RESULT, product_description, full_url)
                 products.append(product)
+                if len(products) >= LIMIT:
+                    break
 
         return products  
 
@@ -185,6 +192,8 @@ class AmazonScraper(Scraper):
         return str
 
     def extract_recommendations_from_product_details(self, page):
+        LIMIT = 5
+
         content  = self.scrape_and_cache(page)
         soup     = BeautifulSoup(content, "lxml")
 
@@ -204,6 +213,8 @@ class AmazonScraper(Scraper):
                     product_description = self.add_to_str(product_description, "Product Title: ", product_title)
                     product_description = self.add_to_str(product_description, "Product Price", product_price)
                     recommendations.append(Action(ActionType.CLICK_RECOMMENDED, product_description, full_url))
+                    if len(recommendations) >= LIMIT:
+                        break
             except:
                 continue
 
@@ -260,7 +271,7 @@ class AmazonScraper(Scraper):
             num_ratings = ratings_span.get_text().replace(" ratings", "").replace(",", "")
             product_description = self.add_to_str(product_description, "Number Ratings: ", num_ratings)
 
-        return [Action(ActionType.CHECKOUT, product_description, None)]
+        return [Action(ActionType.BUY_NOW, product_description, None)]
 
     def generate_amazon_search_url(self, search_query):
         base_url = "https://www.amazon.com/s"
@@ -288,7 +299,7 @@ class Agent:
                 print(next_action.to_json())
                 self.actions_history.append(next_action)
 
-            if next_action is not None and next_action.action_type is not ActionType.CHECKOUT:
+            if next_action is not None and next_action.action_type is not ActionType.BUY_NOW:
                 self.next_possible_actions = self.scraper.scrape_page_into_possible_actions(next_action.target_url)
                 #print(Action.array_to_json(self.next_possible_actions))
             else:
@@ -296,10 +307,8 @@ class Agent:
 
     def choose_from_next_actions(self):
         # Temporary helper for testing / TODO: remove
-        if len(self.next_possible_actions) >= 1:
+        if len(self.next_possible_actions) == 1:
             return self.next_possible_actions[0]
-        else:
-            return None
 
         # TODO: Add compressed user history?
         base_prompt = """
@@ -335,7 +344,7 @@ class Agent:
             return None
 
         for action in self.next_possible_actions:
-            if action.action_id == action_id:
+            if str(action.action_id).strip() == str(action_id).strip():
                 return action
 
         return None
@@ -347,4 +356,4 @@ up      = UserProfile("Male", "18", "35", "United States", "Hiking")
 agent   = Agent(up, "hiking shoes", scraper)
 agent.execute()
 
-print(Action.array_to_json(agent.actions_history))
+#print(Action.array_to_json(agent.actions_history))
