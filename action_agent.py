@@ -269,7 +269,7 @@ class AmazonScraper(Scraper):
 
         if ratings_span:
             num_ratings = ratings_span.get_text().replace(" ratings", "").replace(",", "")
-            product_description = self.add_to_str(product_description, "Number Ratings: ", num_ratings)
+            product_description = self.add_to_str(product_description, "Number Ratings", num_ratings)
 
         return [Action(ActionType.BUY_NOW, product_description, None)]
 
