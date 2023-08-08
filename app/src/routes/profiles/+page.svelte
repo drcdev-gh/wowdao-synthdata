@@ -9,4 +9,5 @@
 
 <section class="flex flex-col justify-center grow">
 	<h1>Setup your User Profile</h1>
+
 </section>

@@ -4,7 +4,7 @@
 	import { SvelteUIProvider } from '@svelteuidev/core';
 </script>
 
-<SvelteUIProvider>
+<SvelteUIProvider withNormalizeCSS withGlobalStyles themeObserver={'dark'}>
 	<div class="app">
 		<Header />
 		<main>
