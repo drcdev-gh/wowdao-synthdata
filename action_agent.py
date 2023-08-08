@@ -211,7 +211,7 @@ class AmazonScraper(Scraper):
 
                 if product_title is not None and product_url is not None:
                     product_description = self.add_to_str(product_description, "Product Title: ", product_title)
-                    product_description = self.add_to_str(product_description, "Product Price", product_price)
+                    product_description = self.add_to_str(product_description, "Product Price: ", product_price)
                     recommendations.append(Action(ActionType.CLICK_RECOMMENDED, product_description, full_url))
                     if len(recommendations) >= LIMIT:
                         break
