@@ -85,7 +85,7 @@ class Scraper:
 
         # If not cached, scrape the webpage
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
         req      = Request(url, headers=headers)
         response = urlopen(req)
@@ -174,7 +174,7 @@ class AmazonScraper(Scraper):
                 products.append(product)
 
         return products  
-    
+
     def add_to_str(self, str, key, item):
         if item is not None:
             if str is None:
@@ -189,8 +189,56 @@ class AmazonScraper(Scraper):
         return []
 
     def extract_checkout_from_product_details(self, page):
-        # TODO: implement - copy/paste from amazon_scrape_test
-        return []
+        content  = self.scrape_and_cache(page)
+        soup     = BeautifulSoup(content, "lxml")
+
+        product_description = ""
+
+        feature_bullets_div = soup.find("div", id="feature-bullets")
+
+        # Find the span element with id "productTitle"
+        product_title_span = soup.find("span", id="productTitle")
+
+        if product_title_span:
+            escaped_title = product_title_span.get_text(strip=True)
+            product_description = self.add_to_str(product_description, "Product Title: ", escaped_title)
+
+        # Extract the bullet points
+        if feature_bullets_div:
+            bullet_points = feature_bullets_div.find_all("span", class_="a-list-item")
+
+            bullet_points = ""
+            for bullet_point in bullet_points:
+                if bullet_point.get_text() != "":
+                    bullet_points += bullet_point.get_text() + "; "
+            product_description = self.add_to_str(product_description, "Product Description: ", bullet_points)
+
+        # Find the span elements with class "a-price-range"
+        price_range_spans = soup.find_all("span", class_="a-price-range")
+
+        for price_range_span in price_range_spans:
+            # Extract the price from each span
+            price_elements = price_range_span.find_all("span", class_="a-price")
+            for price_element in price_elements:
+                price = price_element.find("span", class_="a-offscreen").get_text()
+                product_description = self.add_to_str(product_description, "Price: ", bullet_points)
+
+        # Find the span element with class "reviewCountTextLinkedHistogram"
+        average_review_span = soup.find("span", class_="reviewCountTextLinkedHistogram")
+
+        if average_review_span:
+            title = average_review_span.get("title")
+            average_review = title.split(" ")[0] if title else None
+            product_description = self.add_to_str(product_description, "Average Review: ", average_review)
+
+        # Find the span element with id "acrCustomerReviewText"
+        ratings_span = soup.find("span", id="acrCustomerReviewText")
+
+        if ratings_span:
+            num_ratings = ratings_span.get_text().replace(" ratings", "").replace(",", "")
+            product_description = self.add_to_str(product_description, "Number Ratings: ", num_ratings)
+
+        return [Action(ActionType.CHECKOUT, product_description, None)]
 
     def generate_amazon_search_url(self, search_query):
         base_url = "https://www.amazon.com/s"
