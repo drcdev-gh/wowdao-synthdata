@@ -4,10 +4,17 @@ from typing import List, Optional
 import uuid
 import asyncio
 from fastapi import BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 
 import action_agent
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class AgentDbEntry:
     def __init__(self, api_agent, agent):
@@ -39,23 +46,23 @@ class AgentUpdate(BaseModel):
 
 agent_db = {}
 
-@app.post("/agents/", response_model=Agent)
+@app.post("/agents", response_model=Agent)
 def create_agent(agent: AgentCreate):
     agent_id      = str(uuid.uuid1())
     new_api_agent = Agent(id=agent_id, **agent.dict())
 
     scraper       = action_agent.AmazonScraper()
     up            = action_agent.UserProfile(agent.profile.gender,
-                                            agent.profile.ageFrom,
-                                            agent.profile.ageTo,
-                                            agent.profile.location,
-                                            agent.profile.interests)
+                                             agent.profile.ageFrom,
+                                             agent.profile.ageTo,
+                                             agent.profile.location,
+                                             agent.profile.interests)
     new_agent     = action_agent.Agent(up, agent.goal, scraper)
 
     agent_db[agent_id] = AgentDbEntry(new_api_agent, new_agent)
     return new_api_agent
 
-@app.get("/agents/", response_model=List[Agent])
+@app.get("/agents", response_model=List[Agent])
 def get_agents():
     ret = []
     for agent_entry in agent_db.values():
@@ -92,7 +99,7 @@ def get_agent_status(agent_id: str):
 def run_execute(agent_id):
     agent_db[agent_id].agent.execute()
 
-@app.get("/agents/{agent_id}/dispatch")
+@app.post("/agents/{agent_id}/dispatch")
 async def dispatch_agent(agent_id: str, background_tasks: BackgroundTasks):
     if agent_id not in agent_db:
         raise HTTPException(status_code=404, detail="Agent not found")
