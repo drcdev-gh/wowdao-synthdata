@@ -44,20 +44,6 @@ export default class ApiClient {
 		return fetch(`${this.baseUrl}/agents/${id}/logs`).then((res) => res.json());
 	}
 
-	async getAgentLog(id: string, logId: string) {
-		return fetch(`${this.baseUrl}/agents/${id}/logs/${logId}`).then((res) => res.json());
-	}
-
-	async updateAgent(id: string, agent: Agent) {
-		return fetch(`${this.baseUrl}/agents/${id}`, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(agent)
-		}).then((res) => res.json());
-	}
-
 	async deleteAgent(id: string) {
 		return fetch(`${this.baseUrl}/agents/${id}`, {
 			method: 'DELETE'
