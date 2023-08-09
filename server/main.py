@@ -57,7 +57,7 @@ def create_agent(agent: AgentCreate):
                                              agent.profile.ageTo,
                                              agent.profile.location,
                                              agent.profile.interests)
-    new_agent     = action_agent.Agent(up, agent.goal, scraper)
+    new_agent     = action_agent.Agent(agent_id, up, agent.goal, scraper)
 
     agent_db[agent_id] = AgentDbEntry(new_api_agent, new_agent)
     return new_api_agent
@@ -104,11 +104,11 @@ async def dispatch_agent(agent_id: str, background_tasks: BackgroundTasks):
     if agent_id not in agent_db:
         raise HTTPException(status_code=404, detail="Agent not found")
 
-    if agent_db[agent_id].agent.status is action_agent.AgentStatus.IN_PROGRESS:
-        return "Already running"
-    if agent_db[agent_id].agent.status is action_agent.AgentStatus.FINISHED:
-        return "Already done"
-
+    # if agent_db[agent_id].agent.status is action_agent.AgentStatus.IN_PROGRESS:
+    #     return "Already running"
+    # if agent_db[agent_id].agent.status is action_agent.AgentStatus.FINISHED:
+    #     return "Already done"
+    #
     background_tasks.add_task(run_execute, agent_id=agent_id)
 
     return "Successfully started"

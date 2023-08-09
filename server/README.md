@@ -17,7 +17,7 @@ uvicorn main:app --reload
 
 From another shell, create a new agent:
 ```bash
-curl -X POST "http://localhost:8000/agents/" -H "Content-Type: application/json" -d '{
+curl -X POST "http://localhost:8000/agents" -H "Content-Type: application/json" -d '{
   "name": "Test Agent",
   "goal": "hiking shoes",
   "profile": {
@@ -32,7 +32,7 @@ curl -X POST "http://localhost:8000/agents/" -H "Content-Type: application/json"
 
 Get all agents:
 ```bash
-curl -X GET "http://localhost:8000/agents/"
+curl -X GET "http://localhost:8000/agents"
 ```
 
 Get agent details by ID:

@@ -9,6 +9,7 @@ charset-normalizer==3.2.0
 click==8.1.6
 dataclasses-json==0.5.14
 exceptiongroup==1.1.2
+fake-useragent==1.2.1
 fastapi==0.99.0
 frozenlist==1.4.0
 greenlet==2.0.2

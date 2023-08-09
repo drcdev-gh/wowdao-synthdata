@@ -7,6 +7,7 @@ import json
 import sqlite3
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
 
 class UserProfile:
     def __init__(self, gender, age_from, age_to, location, interest):
@@ -15,6 +16,9 @@ class UserProfile:
         self.age_to     = age_to
         self.location   = location
         self.interest   = interest
+
+    def __str__(self):
+        return f'Gender: {self.gender} | Age: {self.age_from}-{self.age_to} | Location: {self.location} | Interest: {self.interest}'
 
 class PageType(Enum):
     SEARCH_RESULTS  = 1
@@ -47,6 +51,9 @@ class Action:
             options += action.to_json() + "\n"
 
         return options
+
+    def __str__(self):
+        return self.to_json()
 
 class Scraper:
     def __init__(self, scraper_name):
@@ -86,7 +93,8 @@ class Scraper:
 
         # If not cached, scrape the webpage
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': UserAgent().random,
+            'Accept-Language': 'en-US,en;q=0.9'
         }
         req      = Request(url, headers=headers)
         response = urlopen(req)
@@ -133,6 +141,7 @@ class AmazonScraper(Scraper):
     def extract_products_from_search_page(self, page):
         LIMIT = 5
         products = []
+        print('scraping search page', page)
         content  = self.scrape_and_cache(page)
 
         soup = BeautifulSoup(content, "lxml")
@@ -180,7 +189,7 @@ class AmazonScraper(Scraper):
                 if len(products) >= LIMIT:
                     break
 
-        return products  
+        return products
 
     def add_to_str(self, str, key, item):
         if item is not None:
@@ -286,13 +295,14 @@ class AgentStatus(Enum):
     FINISHED    = 3
 
 class Agent:
-    def __init__(self, user_profile, initial_goal, scraper):
-        self.user_profile          = user_profile
-        self.initial_goal          = initial_goal
-        self.actions_history       = []
+    def __init__(self, agent_id, user_profile, initial_goal, scraper):
+        self.id = agent_id
+        self.user_profile = user_profile
+        self.initial_goal = initial_goal
+        self.actions_history = []
         self.next_possible_actions = []
-        self.scraper               = scraper
-        self.status                = AgentStatus.NOT_STARTED
+        self.scraper: Scraper = scraper
+        self.status = AgentStatus.NOT_STARTED
 
     def execute(self):
         self.status = AgentStatus.IN_PROGRESS
@@ -302,6 +312,7 @@ class Agent:
 
         while True:
             next_action = self.choose_from_next_actions()
+            print(f"Agent: {self.id} action: {str(next_action)}")
 
             if next_action is not None:
                 #print(next_action.to_json())
@@ -311,6 +322,7 @@ class Agent:
                 self.next_possible_actions = self.scraper.scrape_page_into_possible_actions(next_action.target_url)
                 #print(Action.array_to_json(self.next_possible_actions))
             else:
+                print(f"Agent: {str(self.user_profile)} FINISHED with {str(next_action.action_type)}")
                 break
 
         self.status = AgentStatus.FINISHED
