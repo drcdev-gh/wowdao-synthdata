@@ -3,13 +3,14 @@
 		Button,
 		Container,
 		Modal,
+        Grid,
 		Group,
 		InputWrapper,
 		RadioGroup,
 		TextInput,
 		Textarea
 	} from '@svelteuidev/core';
-    import Api from '$lib/api';
+    import Api, { Agent, Profile } from '$lib/api';
 
 	let opened = false;
 
@@ -26,6 +27,7 @@
 		{ label: 'Female', value: 'female' }
 	];
 
+    let name = '';
 	let gender = 'male';
 	let ageFrom = '';
 	let ageTo = '';
@@ -36,6 +38,17 @@
     const apiClient = new Api();
 
     function handleCreate() {
+      const profile = {
+        gender, ageFrom, ageTo, location, interests, description
+      };
+
+      const agent = {
+        name, profile
+      };
+
+      apiClient.createAgent(agent).then((agent) => {
+        console.log(agent);
+      });
     }
 
 </script>
@@ -46,6 +59,7 @@
 </svelte:head>
 
 <Modal {opened} title="Create Agent profile." on:close={handleClose}>
+    <TextInput label="Name" bind:name radius="sm" />
 	<RadioGroup label="Gender" bind:gender items={genders} />
 	<TextInput label="Age From" bind:ageFrom radius="sm" />
 	<TextInput label="Age To" bind:ageTo radius="sm" />
@@ -69,4 +83,6 @@
 	<Container>
 		<Button on:click={toggleOpen}>Create Agent</Button>
 	</Container>
+    <Container>
+    </Container>
 </section>
