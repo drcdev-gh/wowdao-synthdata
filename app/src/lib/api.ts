@@ -10,6 +10,7 @@ export interface Profile {
 export interface Agent {
 	id?: string;
 	name: string;
+	goal: string,
 	profile: Profile;
 }
 

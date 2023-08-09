@@ -25,10 +25,12 @@ class Profile(BaseModel):
 class Agent(BaseModel):
     id: Optional[str] = None
     name: str
+    goal: str
     profile: Profile
 
 class AgentCreate(BaseModel):
     name: str
+    goal: str
     profile: Profile
 
 class AgentUpdate(BaseModel):
@@ -48,8 +50,7 @@ def create_agent(agent: AgentCreate):
                                             agent.profile.ageTo,
                                             agent.profile.location,
                                             agent.profile.interests)
-    # TODO: goal is missing as parameter
-    new_agent     = action_agent.Agent(up, "hiking shoes", scraper)
+    new_agent     = action_agent.Agent(up, agent.goal, scraper)
 
     agent_db[agent_id] = AgentDbEntry(new_api_agent, new_agent)
     return new_api_agent
