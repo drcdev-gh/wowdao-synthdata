@@ -294,7 +294,7 @@ class Agent:
         self.scraper               = scraper
         self.status                = AgentStatus.NOT_STARTED
 
-    async def execute(self):
+    def execute(self):
         self.status = AgentStatus.IN_PROGRESS
 
         if len(self.actions_history) == 0:

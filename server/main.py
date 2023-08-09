@@ -88,8 +88,11 @@ def get_agent_status(agent_id: str):
         raise HTTPException(status_code=404, detail="Agent not found")
     return agent_db[agent_id].agent.status
 
+def run_execute(agent_id):
+    agent_db[agent_id].agent.execute()
+
 @app.get("/agents/{agent_id}/dispatch")
-def dispatch_agent(agent_id: str, background_tasks: BackgroundTasks):
+async def dispatch_agent(agent_id: str, background_tasks: BackgroundTasks):
     if agent_id not in agent_db:
         raise HTTPException(status_code=404, detail="Agent not found")
 
@@ -98,9 +101,6 @@ def dispatch_agent(agent_id: str, background_tasks: BackgroundTasks):
     if agent_db[agent_id].agent.status is action_agent.AgentStatus.FINISHED:
         return "Already done"
 
-    async def execute_agent():
-        await agent_db[agent_id].agent.execute()
-
-    background_tasks.add_task(execute_agent)  # Add the function to be executed in the background
+    background_tasks.add_task(run_execute, agent_id=agent_id)
 
     return "Successfully started"
