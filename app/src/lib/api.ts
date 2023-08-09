@@ -63,4 +63,10 @@ export default class ApiClient {
 			method: 'DELETE'
 		}).then((res) => res.json());
 	}
+
+	async dispatchAgent(id: string) {
+		return fetch(`${this.baseUrl}/agents/${id}/dispatch`, {
+			method: 'POST'
+		}).then((res) => res.json());
+	}
 }
