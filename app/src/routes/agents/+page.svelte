@@ -1,16 +1,22 @@
-<script>
+<script lang="ts">
+	import { onMount } from 'svelte';
 	import {
 		Button,
+        Center,
 		Container,
 		Modal,
-        Grid,
 		Group,
 		InputWrapper,
 		RadioGroup,
+        Title,
+        Text,
 		TextInput,
 		Textarea
 	} from '@svelteuidev/core';
-    import Api, { Agent, Profile } from '$lib/api';
+	import SvelteTable from 'svelte-table';
+	import { apiClient as api } from '$lib/api';
+    import type { Agent, Profile } from '$lib/api';
+	import { getAgentsStore } from './stores';
 
 	let opened = false;
 
@@ -27,7 +33,7 @@
 		{ label: 'Female', value: 'female' }
 	];
 
-    let name = '';
+	let name = '';
 	let gender = 'male';
 	let ageFrom = '';
 	let ageTo = '';
@@ -35,22 +41,41 @@
 	let interests = [];
 	let description = '';
 
-    const apiClient = new Api();
+	function handleCreate() {
+		const profile: Profile = {
+			gender,
+			ageFrom,
+			ageTo,
+			location,
+			interests,
+			description
+		};
 
-    function handleCreate() {
-      const profile = {
-        gender, ageFrom, ageTo, location, interests, description
-      };
+		const agent: Agent = {
+			name,
+			profile
+		};
 
-      const agent = {
-        name, profile
-      };
+		api.createAgent(agent).then((agent) => {
+			console.log(agent);
+            // close modal.
+            opened = false;
+		});
+	}
 
-      apiClient.createAgent(agent).then((agent) => {
-        console.log(agent);
-      });
-    }
+	const columns = [
+		{ key: 'name', title: 'Name', value: (v) => v.name },
+		{ key: 'age', title: 'Age', value: (v) => `${v.profile.ageFrom} - ${v.profile.ageTo}` },
+		{ key: 'location', title: 'Location', value: (v) => v.profile.location },
+		{ key: 'interests', title: 'Interests', value: (v) => v.profile.interests.join(', ') },
+		{ key: 'description', title: 'Description', value: (v) => v.profile.description }
+	];
 
+    const agents = getAgentsStore();
+
+	onMount(async () => {
+      await agents.init();
+	});
 </script>
 
 <svelte:head>
@@ -59,7 +84,7 @@
 </svelte:head>
 
 <Modal {opened} title="Create Agent profile." on:close={handleClose}>
-    <TextInput label="Name" bind:name radius="sm" />
+	<TextInput label="Name" bind:name radius="sm" />
 	<RadioGroup label="Gender" bind:gender items={genders} />
 	<TextInput label="Age From" bind:ageFrom radius="sm" />
 	<TextInput label="Age To" bind:ageTo radius="sm" />
@@ -82,7 +107,9 @@
 <section class="flex flex-col justify-center grow">
 	<Container>
 		<Button on:click={toggleOpen}>Create Agent</Button>
+        <Center>
+            <Title order={1} class="mb-10">List of Agents</Title>
+        </Center>
+		<SvelteTable rows={$agents} {columns} classNameRow="my-10" classNameCell="px-10"/>
 	</Container>
-    <Container>
-    </Container>
 </section>

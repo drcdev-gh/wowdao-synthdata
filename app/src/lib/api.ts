@@ -1,3 +1,6 @@
+import dummyData from './dummyData.json';
+import { PUBLIC_API_BASE_URL } from '$env/static/public';
+
 export interface Profile {
 	gender: string;
 	ageFrom: number;
@@ -14,12 +17,12 @@ export interface Agent {
 	profile: Profile;
 }
 
-export default class ApiClient {
+export class ApiClient {
 	constructor(private baseUrl: string) {
 		this.baseUrl = baseUrl;
 	}
 
-	async createAgent(agent: Agent) {
+	async createAgent(agent: Agent): Promise<Agent> {
 		return fetch(`${this.baseUrl}/agents`, {
 			method: 'POST',
 			headers: {
@@ -29,16 +32,13 @@ export default class ApiClient {
 		}).then((res) => res.json());
 	}
 
-	async getAgents() {
-		return fetch(`${this.baseUrl}/agents`).then((res) => res.json());
+	async getAgents(): Promise<Agent[]> {
+		// return fetch(`${this.baseUrl}/agents`).then((res) => res.json());
+		return Promise.resolve(dummyData);
 	}
 
-	async getAgent(id: string) {
+	async getAgent(id: string): Promise<Agent> {
 		return fetch(`${this.baseUrl}/agents/${id}`).then((res) => res.json());
-	}
-
-	async getAgentStatus(id: string) {
-		return fetch(`${this.baseUrl}/agents/${id}/status`).then((res) => res.json());
 	}
 
 	async getAgentLogs(id: string) {
@@ -57,3 +57,5 @@ export default class ApiClient {
 		}).then((res) => res.json());
 	}
 }
+
+export const apiClient = new ApiClient(PUBLIC_API_BASE_URL);

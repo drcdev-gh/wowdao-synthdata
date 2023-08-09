@@ -1,0 +1,26 @@
+[
+	{
+		"id": "id-0",
+		"name": "John",
+		"profile": {
+			"gender": "male",
+			"ageFrom": 20,
+			"ageTo": 30,
+			"location": "London",
+			"interests": ["music", "sport"],
+			"description": "I am a nice guy"
+		}
+	},
+	{
+		"id": "id-1",
+		"name": "Jane",
+		"profile": {
+			"gender": "female",
+			"ageFrom": 20,
+			"ageTo": 30,
+			"location": "Frankfurt",
+			"interests": ["music", "sport", "cooking"],
+			"description": "I am a nice girl"
+		}
+	}
+]
