@@ -22,14 +22,14 @@ export class ApiClient {
 	}
 
 	async createAgent(agent: Agent): Promise<Agent> {
-        const response = await fetch(`${this.baseUrl}/agents`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(agent)
-        })
-        return response.json();
+		const response = await fetch(`${this.baseUrl}/agents`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(agent)
+		});
+		return response.json();
 	}
 
 	async getAgents(): Promise<Agent[]> {

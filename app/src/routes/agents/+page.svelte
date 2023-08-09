@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-    import { get } from 'svelte/store';
+	import { get } from 'svelte/store';
 	import {
 		Button,
 		Center,
 		Container,
 		Modal,
 		Group,
-        NativeSelect,
+		NativeSelect,
 		InputWrapper,
 		RadioGroup,
 		Title,
@@ -37,12 +37,12 @@
 
 	let name = '';
 	let gender = 'male';
-	let ageFrom: number  = 0;
+	let ageFrom: number = 0;
 	let ageTo: number = 0;
 	let location = '';
 	let interests = '';
 	let description = '';
-    let goal = '';
+	let goal = '';
 
 	function handleCreate() {
 		const profile: Profile = {
@@ -50,22 +50,21 @@
 			ageFrom: parseInt(ageFrom),
 			ageTo: parseInt(ageTo),
 			location,
-			interests: interests.split(",").map((interest) => interest.trim()),
+			interests: interests.split(',').map((interest) => interest.trim()),
 			description
 		};
 
 		const agent: Agent = {
 			name,
-            goal,
+			goal,
 			profile
 		};
 
-        console.log(`Creating agent: ${JSON.stringify(agent)}`);
+		console.log(`Creating agent: ${JSON.stringify(agent)}`);
 
-		api
-			.createAgent(agent)
+		agents.create(agent)
 			.then((agent) => {
-				console.log(`Successfully created: ${agent}`);
+				console.log(`Successfully created: ${JSON.stringify(agent)}`);
 				toast.push(`Successfully created: ${agent.name}`, {
 					theme: {
 						'--toastColor': 'mintcream',
@@ -73,8 +72,7 @@
 						'--toastBarBackground': '#2F855A'
 					}
 				});
-                agents.create(agent);
-            })
+			})
 			.catch((err) => {
 				console.log(`Error: ${err}`);
 				toast.push(`Error: ${err}`, {
@@ -85,15 +83,15 @@
 					}
 				});
 			})
-            .finally(() => {
-                // close modal.
-                opened = false;
-            });
+			.finally(() => {
+				// close modal.
+				opened = false;
+			});
 	}
 
 	function handleDispatchClick(agent: Agent) {
-		api.dispatchAgent(agent).then((status) => {
-			console.log(`Successfully dispatched: ${status}`);
+		api.dispatchAgent(agent.id).then((status) => {
+			console.log(`Successfully dispatched to ${agent.id}`);
 			toast.push(`Dispatched job to agent: ${agent.name}`, {
 				theme: {
 					'--toastColor': 'mintcream',
@@ -108,7 +106,6 @@
 
 	onMount(async () => {
 		await agents.init();
-        console.log(get(agents));
 	});
 </script>
 
@@ -119,6 +116,7 @@
 
 <Modal {opened} title="Create Agent" on:close={handleClose}>
 	<TextInput label="Name" bind:value={name} radius="sm" />
+	<TextInput  label="Goal" bind:value={goal} radius="sm"/>
 	<RadioGroup label="Gender" bind:value={gender} items={genders} />
 	<TextInput label="Age From" bind:value={ageFrom} radius="sm" />
 	<TextInput label="Age To" bind:value={ageTo} radius="sm" />
@@ -128,22 +126,21 @@
 		placeholder="games,sports,football,hiphop"
 		description="comma separated list of interests"
 		radius="sm"
-        bind:value={interests}
+		bind:value={interests}
 	/>
 	<Textarea
 		label="Description"
 		description="Additional description of imaginary user"
 		radius="sm"
 		size="xl"
-        bind:value={description}
+		bind:value={description}
 	/>
-    <NativeSelect bind:value={goal} label="Goal" data={['buy_now', 'close']} radius="sm" size="sm"/>
 	<Button on:click={handleCreate}>Create</Button>
 </Modal>
 
 <section class="flex flex-col justify-center grow">
 	<Container>
-        <Center><Button on:click={toggleOpen}>Create Agent</Button></Center>
+		<Center><Button on:click={toggleOpen}>Create Agent</Button></Center>
 		<table class="table-auto text-center">
 			<thead>
 				<th class="px-8">Name</th>
@@ -151,6 +148,7 @@
 				<th class="px-8">Location</th>
 				<th class="px-8">Interests</th>
 				<th class="px-8">Description</th>
+                <th class="px-8">Goal</th>
 				<th class="px-10">Dispatch</th>
 			</thead>
 			<tbody>
@@ -161,7 +159,10 @@
 						<td>{agent.profile.location}</td>
 						<td>{agent.profile.interests.join(', ')}</td>
 						<td>{agent.profile.description}</td>
-						<td class="flex justify-center"><Button on:click={() => handleDispatchClick(agent)}>Start Job</Button></td>
+                        <td>{agent.goal}</td>
+						<td class="flex justify-center"
+							><Button on:click={() => handleDispatchClick(agent)}>Start Job</Button></td
+						>
 					</tr>
 				{/each}
 			</tbody>
