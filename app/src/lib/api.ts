@@ -1,4 +1,3 @@
-import dummyData from './dummyData.json';
 import { PUBLIC_API_BASE_URL } from '$env/static/public';
 
 export interface Profile {
@@ -13,7 +12,7 @@ export interface Profile {
 export interface Agent {
 	id?: string;
 	name: string;
-	goal: string,
+	goal: string;
 	profile: Profile;
 }
 
@@ -23,18 +22,18 @@ export class ApiClient {
 	}
 
 	async createAgent(agent: Agent): Promise<Agent> {
-		return fetch(`${this.baseUrl}/agents`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(agent)
-		}).then((res) => res.json());
+        const response = await fetch(`${this.baseUrl}/agents`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(agent)
+        })
+        return response.json();
 	}
 
 	async getAgents(): Promise<Agent[]> {
-		// return fetch(`${this.baseUrl}/agents`).then((res) => res.json());
-		return Promise.resolve(dummyData);
+		return fetch(`${this.baseUrl}/agents`).then((res) => res.json());
 	}
 
 	async getAgent(id: string): Promise<Agent> {
@@ -51,10 +50,10 @@ export class ApiClient {
 		}).then((res) => res.json());
 	}
 
-	async dispatchAgent(id: string) {
+	async dispatchAgent(id: string): Promise<string> {
 		return fetch(`${this.baseUrl}/agents/${id}/dispatch`, {
 			method: 'POST'
-		}).then((res) => res.json());
+		}).then((res) => res.text());
 	}
 }
 
