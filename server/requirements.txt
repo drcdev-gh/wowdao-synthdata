@@ -2,3 +2,5 @@ beautifulsoup4
 langchain
 openai
 lxml
+tiktoken
+fastapi==0.99.0

@@ -280,6 +280,11 @@ class AmazonScraper(Scraper):
         amazon_search_url = f"{base_url}?{encoded_params}"
         return amazon_search_url
 
+class AgentStatus(Enum):
+    NOT_STARTED = 1
+    IN_PROGRESS = 2
+    FINISHED    = 3
+
 class Agent:
     def __init__(self, user_profile, initial_goal, scraper):
         self.user_profile          = user_profile
@@ -287,8 +292,11 @@ class Agent:
         self.actions_history       = []
         self.next_possible_actions = []
         self.scraper               = scraper
+        self.status                = AgentStatus.NOT_STARTED
 
-    def execute(self):
+    async def execute(self):
+        self.status = AgentStatus.IN_PROGRESS
+
         if len(self.actions_history) == 0:
             self.next_possible_actions = self.scraper.get_initial_actions(self.initial_goal)
 
@@ -304,6 +312,8 @@ class Agent:
                 #print(Action.array_to_json(self.next_possible_actions))
             else:
                 break
+
+        self.status = AgentStatus.FINISHED
 
     def choose_from_next_actions(self):
         if len(self.next_possible_actions) == 1:
@@ -354,9 +364,9 @@ class Agent:
 
 ###
 
-scraper = AmazonScraper()
-up      = UserProfile("Male", "18", "35", "United States", "Hiking")
-agent   = Agent(up, "hiking shoes", scraper)
-agent.execute()
-
-print(Action.array_to_json(agent.actions_history))
+#scraper = AmazonScraper()
+#up      = UserProfile("Male", "18", "35", "United States", "Hiking")
+#agent   = Agent(up, "hiking shoes", scraper)
+#agent.execute()
+#
+#print(Action.array_to_json(agent.actions_history))
