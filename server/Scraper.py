@@ -2,6 +2,9 @@ import enum
 from enum import Enum
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
+import threading
+from random import randint
+from time import sleep
 
 
 import sqlite3
@@ -12,6 +15,7 @@ from Action import ActionType
 
 
 class Scraper:
+    db_lock = threading.Lock()
     def __init__(self, scraper_name):
         self.scraper_name = scraper_name
 
@@ -37,6 +41,7 @@ class Scraper:
         return []
 
     def scrape_and_cache(self, url):
+        Scraper.db_lock.acquire()
         # Check if the URL is already cached
         conn = sqlite3.connect('webpages.db')
         c = conn.cursor()
@@ -45,6 +50,7 @@ class Scraper:
         conn.close()
 
         if cached_data:
+            Scraper.db_lock.release()
             return cached_data[0]
 
         # If not cached, scrape the webpage
@@ -64,8 +70,11 @@ class Scraper:
             conn.commit()
             conn.close()
 
+            sleep(randint(1,8) * 0.01)
+            Scraper.db_lock.release()
             return response_content
 
+        Scraper.db_lock.release()
         return None
 
 
