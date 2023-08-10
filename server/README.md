@@ -1,4 +1,16 @@
-# SynthData Generation - Server Usage
+# SynthData Generation Server
+
+The server:
+* Scrapes an eCommerce webpage
+* Let's an LLM go through the scraped options to decide which action to take
+
+It uses:
+* BeautifulSoup for scraping
+* Langchain and OpenAI for making the action decision
+
+All data is stored in an sqlite database for simplicities sake.
+
+## Usage
 
 Install requirements:
 ```bash
