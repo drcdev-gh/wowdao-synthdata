@@ -26,7 +26,11 @@ class AgentTask:
         self.actions_history = []
         self.next_possible_actions = []
         self.scraper: Scraper = scraper
-        self.seed = seed
+        # TODO needed?
+        if seed is None:
+            self.seed = uuid.uuid1()
+        else:
+            self.seed = seed
         self.status = TaskStatus.NOT_STARTED
 
     def persist(self):
@@ -49,7 +53,7 @@ class AgentTask:
             INSERT INTO agent_tasks (id, agent_id, initial_goal, seed, status)
             VALUES (?, ?, ?, ?, ?)
         ''', (
-            str(self.id), str(self.agent.id), self.initial_goal, self.seed, self.status.value
+            str(self.id), str(self.agent.id), self.initial_goal, str(self.seed), self.status.value
         ))
         conn.commit()
 

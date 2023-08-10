@@ -5,6 +5,7 @@ import uuid
 from fastapi import BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
+import datetime
 
 import action_agent
 import agent_task
@@ -46,6 +47,31 @@ class AgentResponse(BaseModel):
     def from_agent(cls, agent: action_agent.Agent):
         return cls(id=agent.id, name=agent.name, profile=UserProfileData.from_user_profile(agent.user_profile))
 
+
+class LogResponse(BaseModel):
+    timestamp: int
+    agent_id: str
+    task_id: str
+    action_id: str
+    action_type: str
+    goal: str
+    seed: str
+    url: str
+    step: int
+
+    @classmethod
+    def from_action_history_entry(cls, action_history_entry: action_agent.Action,
+                                  task: agent_task.AgentTask):
+        # TODO: fix the dummy entries
+        return cls(timestamp=int(round(datetime.datetime.now().timestamp())),
+                   agent_id=str(task.agent.id),
+                   task_id=str(task.id),
+                   action_id=str(action_history_entry.action_id),
+                   action_type=str(action_history_entry.action_type),
+                   goal=task.initial_goal,
+                   seed=str(task.seed),
+                   url=action_history_entry.target_url,
+                   step=1)
 
 class TaskResponse(BaseModel):
     id: str
@@ -135,13 +161,12 @@ async def get_tasks() -> List[TaskResponse]:
 
 
 @app.get("/logs")
-async def get_logs():
-    # TODO: comply with frontend types.
+async def get_logs() -> List[LogResponse]:
     ret = []
     for task_entry in TASK_DB.values():
-        if len(task_entry.actions_history) == 0:
-            continue
-        ret.extend(task_entry.actions_history)
+        for action_entry in task_entry.actions_history:
+            ret.append(LogResponse.from_action_history_entry(action_history_entry=action_entry, task=task_entry))
+
     return ret
 
 def table_exists(table_name):
