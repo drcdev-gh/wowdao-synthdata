@@ -136,8 +136,20 @@ class AgentTask:
 
         self.save_history()
         self.status = TaskStatus.FINISHED
+        self.persist_status_update()
 
-        # TODO: update status to db
+    def persist_status_update(self):
+        conn = sqlite3.connect("storage.db")
+        c = conn.cursor()
+
+        c.execute('''
+            UPDATE agent_tasks
+            SET status = ?
+            WHERE id = ?
+        ''', (self.status.value, str(self.id)))
+
+        conn.commit()
+        conn.close()
 
     def choose_from_next_actions(self):
         if len(self.next_possible_actions) == 1:
