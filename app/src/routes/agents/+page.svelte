@@ -91,7 +91,7 @@
 	let dispatchModalOpen = false;
 	let dispatchAgent;
 	let goal;
-	let seed;
+	let tasknr;
 
 	function handleDispatchToggle(agent: Agent) {
 		dispatchAgent = agent;
@@ -106,7 +106,7 @@
 	function handleDispatchClick() {
 		console.log(dispatchAgent);
 		api
-			.dispatchAgentTask(dispatchAgent.id, goal, seed)
+			.dispatchAgentTask(dispatchAgent.id, goal, tasknr)
 			.then((status) => {
 				toast.push(`Dispatched task for agent: ${dispatchAgent.name}`, {
 					theme: {
@@ -144,7 +144,7 @@
 
 <Modal opened={dispatchModalOpen} title="Set goal for agent" on:close={handleDispatchClose}>
 	<TextInput label="Goal" bind:value={goal} radius="sm" />
-	<TextInput label="Seed" bind:value={seed} radius="sm" />
+	<TextInput label="Nr Tasks" bind:value={tasknr} radius="sm" />
 	<Button class="mt-10" on:click={handleDispatchClick}>Start Task</Button>
 </Modal>
 

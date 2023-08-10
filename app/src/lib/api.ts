@@ -65,17 +65,24 @@ export class ApiClient {
 		}).then((res) => res.json());
 	}
 
-	async dispatchAgentTask(id: string, goal: string, seed?: string): Promise<string> {
-		return fetch(`${this.baseUrl}/agents/${id}/dispatch`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				goal,
-				seed
-			})
-		}).then((res) => res.text());
+	async dispatchAgentTask(id: string, goal: string, nrtasks: number): Promise<string[]> {
+		const results: string[] = [];
+
+		for (let i = 0; i < nrtasks; i++) {
+			const result = await fetch(`${this.baseUrl}/agents/${id}/dispatch`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					goal
+				})
+			}).then((res) => res.text());
+
+			results.push(result);
+		}
+
+		return results;
 	}
 
 	async getLogs(): Promise<Log[]> {
