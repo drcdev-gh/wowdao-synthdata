@@ -75,13 +75,15 @@ class LogResponse(BaseModel):
 
 class TaskResponse(BaseModel):
     id: str
-    agent_id: str
+    goal: str
+    seed: str
     status: str
 
     @classmethod
     def from_agent_task(cls, agent_task: agent_task.AgentTask):
         return cls(id=str(agent_task.id),
-                   agent_id=str(agent_task.agent.id),
+                   goal=agent_task.initial_goal,
+                   seed=str(agent_task.seed),
                    status=str(agent_task.status))
 
 class AgentCreate(BaseModel):
@@ -153,7 +155,6 @@ async def dispatch_agent(agent_id: str, metadata: AgentTaskMetaData, background_
 
 @app.get("/tasks")
 async def get_tasks() -> List[TaskResponse]:
-    # TODO: comply with frontend types.
     ret = []
     for task_entry in TASK_DB.values():
         ret.append(TaskResponse.from_agent_task(task_entry))
