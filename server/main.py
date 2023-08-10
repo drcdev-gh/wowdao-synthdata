@@ -74,7 +74,7 @@ class LogResponse(BaseModel):
                    goal=task.initial_goal,
                    seed=str(task.seed),
                    url=str(action_history_entry.target_url),
-                   step=1)
+                   step=action_history_entry.step)
 
 class TaskResponse(BaseModel):
     id: str

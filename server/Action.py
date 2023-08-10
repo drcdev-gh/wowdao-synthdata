@@ -10,6 +10,7 @@ class Action:
         self.action_type = action_type
         self.context     = context
         self.target_url  = target_url
+        self.step        = None
 
     def to_json(self):
         return json.dumps({

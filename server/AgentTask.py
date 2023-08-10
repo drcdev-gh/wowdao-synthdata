@@ -71,18 +71,20 @@ class AgentTask:
             return
 
         c.execute('''
-            SELECT agent_id, task_id, action_id, action_type, context, target_url
+            SELECT agent_id, task_id, action_id, action_type, context, target_url, step
             FROM logs
             WHERE task_id = ?
+            ORDER BY step
         ''', (str(self.id),))
 
         rows = c.fetchall()
         history = []
 
         for row in rows:
-            agent_id, task_id, action_id, action_type, context, target_url = row
+            agent_id, task_id, action_id, action_type, context, target_url, step = row
             action = Action(action_type, context, target_url)
             action.action_id = action_id
+            action.step = step
             history.append(action)
 
         conn.close()
@@ -99,18 +101,21 @@ class AgentTask:
                 action_id TEXT PRIMARY KEY,
                 action_type TEXT,
                 context TEXT,
-                target_url TEXT
+                target_url TEXT,
+                step INTEGER
             )
         """)
 
-        for action in self.actions_history:
+        for step, action in enumerate(self.actions_history, start=1):
             c.execute('''
-                INSERT INTO logs (agent_id, task_id, action_id, action_type, context, target_url)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO logs (agent_id, task_id, action_id, action_type, context, target_url, step)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
-                str(self.agent.id), str(self.id), str(action.action_id), str(action.action_type.value), str(action.context), str(action.target_url)
+                str(self.agent.id), str(self.id), str(action.action_id), str(action.action_type.value), str(action.context), str(action.target_url), step
             ))
             conn.commit()
+            # TODO: This is really ugly and should be somewhere else, but I'm too lazy
+            action.step = step
         conn.close()
 
     def execute(self):
