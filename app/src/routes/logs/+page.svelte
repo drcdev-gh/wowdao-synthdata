@@ -62,7 +62,7 @@
                 agent_id: logEntry.agent_id,
                 task_id: logEntry.task_id,
                 action_id: logEntry.action_id,
-                action_type: logEntry.action_type,
+                action_type: logEntry.action_type.replace('ActionType.',''),
                 goal: logEntry.goal,
                 url: logEntry.url,
                 step: logEntry.step
