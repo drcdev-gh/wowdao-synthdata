@@ -34,26 +34,20 @@ Get all agents:
 curl -X GET "http://localhost:8000/agents"
 ```
 
-Get agent details by ID:
-```bash
-curl -X GET "http://localhost:8000/agents/{agent_id}"
-```
-
 Delete an agent:
 ```bash
 curl -X DELETE "http://localhost:8000/agents/{agent_id}"
 ```
 
-Get logs for an agent:
+Get tasks:
 ```bash
-curl -X GET "http://localhost:8000/agents/{agent_id}/logs"
+curl -X GET "http://localhost:8000/tasks"
 ```
 
-Get status of an agent:
+Get logs:
 ```bash
-curl -X GET "http://localhost:8000/agents/{agent_id}/status"
+curl -X GET "http://localhost:8000/agents/logs"
 ```
-Note: 1 = Not started, 2 = In progress, 3 = Finished
 
 Start executing an agent:
 ```bash
