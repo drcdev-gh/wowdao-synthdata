@@ -21,11 +21,15 @@
 <style>
     table, th, td {
         border: 1px solid #ccc;
+        font-size: 1em;
     }
 
     th {
         background-color: #393e46;
         color: #fff;
+    }
+    th, td {
+        padding: 10px;
     }
 </style>
 
@@ -38,15 +42,15 @@
 	<Container>
 		<h1 class="text-3xl font-bold my-50">Tasks</h1>
 		<Divider class="my-5" />
-        <table class="table table-fixed text-center border-collapse text-sm border-solid border w-full">
-            <thead class="text-center">
+        <table class="table table-fixed text-left border-collapse text-sm border-solid border w-full">
+            <thead>
                 <tr>
                     <th class="w-32">Id</th>
                     <th class="w-48">Goal</th>
                     <th class="w-32">Status</th>
                 </tr>
             </thead>
-            <tbody class="text-center">
+            <tbody>
                 {#each tasks as task}
                     <tr>
                         <td class="w-32">{task.id}</td>

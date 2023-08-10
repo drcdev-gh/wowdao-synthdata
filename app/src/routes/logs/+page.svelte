@@ -70,7 +70,7 @@
 	<meta name="description" content="Logs" />
 </svelte:head>
 
-<section class="flex flex-col justify-center grow">
+<section class="flex">
 	<Container>
 		<h1 class="text-3xl font-bold">Logs</h1>
 		<Divider class="my-5" />
