@@ -1,22 +1,22 @@
 import enum
 import logging
+import sqlite3
 import uuid
 
 from langchain import LLMChain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
-import sqlite3
 
-from action_agent import Action, ActionType, Scraper, Agent
+from Action import Action, ActionType
+from Agent import Agent
+from Scraper import Scraper
 
 logger = logging.getLogger('uvicorn')
-
 
 class TaskStatus(enum.Enum):
     NOT_STARTED = enum.auto()
     IN_PROGRESS = enum.auto()
     FINISHED    = enum.auto()
-
 
 class AgentTask:
     def __init__(self, agent: Agent, scraper: Scraper, initial_goal, seed=None):

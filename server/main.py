@@ -7,8 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
 import datetime
 
-import action_agent
-import agent_task
+import Agent
+import AgentTask
+import Action
+import Scraper
+import UserProfile
 
 app = FastAPI()
 app.add_middleware(
@@ -27,7 +30,7 @@ class UserProfileData(BaseModel):
     description: Optional[str] = None
 
     @classmethod
-    def from_user_profile(cls, user_profile: action_agent.UserProfile):
+    def from_user_profile(cls, user_profile: UserProfile.UserProfile):
         return cls(
             gender=user_profile.gender,
             ageFrom=user_profile.age_from,
@@ -44,7 +47,7 @@ class AgentResponse(BaseModel):
     profile: UserProfileData
 
     @classmethod
-    def from_agent(cls, agent: action_agent.Agent):
+    def from_agent(cls, agent: Agent.Agent):
         return cls(id=agent.id, name=agent.name, profile=UserProfileData.from_user_profile(agent.user_profile))
 
 
@@ -60,8 +63,8 @@ class LogResponse(BaseModel):
     step: int
 
     @classmethod
-    def from_action_history_entry(cls, action_history_entry: action_agent.Action,
-                                  task: agent_task.AgentTask):
+    def from_action_history_entry(cls, action_history_entry: Action.Action,
+                                  task: AgentTask.AgentTask):
         # TODO: fix the dummy entries
         return cls(timestamp=int(round(datetime.datetime.now().timestamp())),
                    agent_id=str(task.agent.id),
@@ -70,7 +73,7 @@ class LogResponse(BaseModel):
                    action_type=str(action_history_entry.action_type),
                    goal=task.initial_goal,
                    seed=str(task.seed),
-                   url=action_history_entry.target_url,
+                   url=str(action_history_entry.target_url),
                    step=1)
 
 class TaskResponse(BaseModel):
@@ -80,7 +83,7 @@ class TaskResponse(BaseModel):
     status: str
 
     @classmethod
-    def from_agent_task(cls, agent_task: agent_task.AgentTask):
+    def from_agent_task(cls, agent_task: AgentTask.AgentTask):
         return cls(id=str(agent_task.id),
                    goal=agent_task.initial_goal,
                    seed=str(agent_task.seed),
@@ -94,19 +97,19 @@ class AgentTaskMetaData(BaseModel):
     goal: str
     seed: Optional[str] = None
 
-AGENT_DB: List[action_agent.Agent] = {}
-TASK_DB: List[agent_task.AgentTask] = {}
+AGENT_DB: List[Agent.Agent] = {}
+TASK_DB: List[AgentTask.AgentTask] = {}
 
 @app.post("/agents", response_model=AgentResponse)
 def create_agent(agent_data: AgentCreate):
     agent_id      = str(uuid.uuid1())
-    profile       = action_agent.UserProfile(agent_data.profile.gender,
+    profile       = UserProfile.UserProfile(agent_data.profile.gender,
                                              agent_data.profile.ageFrom,
                                              agent_data.profile.ageTo,
                                              agent_data.profile.location,
                                              agent_data.profile.interests,
                                              agent_data.profile.description)
-    new_agent     = action_agent.Agent(agent_id, agent_data.name, profile)
+    new_agent     = Agent.Agent(agent_id, agent_data.name, profile)
     AGENT_DB[agent_id] = new_agent
     profile.persist()
     new_agent.persist()
@@ -146,7 +149,7 @@ async def dispatch_agent(agent_id: str, metadata: AgentTaskMetaData, background_
 
     agent = AGENT_DB[agent_id]
     # TODO: support different types of scrape source.
-    task = agent_task.AgentTask(agent, action_agent.AmazonScraper(), metadata.goal, metadata.seed)
+    task = AgentTask.AgentTask(agent, Scraper.AmazonScraper(), metadata.goal, metadata.seed)
     TASK_DB[task.id] = task
     task.persist()
     background_tasks.add_task(run_agent_task, task)
@@ -197,11 +200,11 @@ def restore_instances():
     for row in rows:
         agent_id, agent_name, gender, age_from, age_to, location, interests_str, agent_task_id, initial_goal, seed, status = row
         interests = interests_str.split(', ')
-        user_profile = action_agent.UserProfile(gender, age_from, age_to, location, interests)
-        agent = action_agent.Agent(agent_id, agent_name, user_profile)
+        user_profile = UserProfile.UserProfile(gender, age_from, age_to, location, interests)
+        agent = Agent.Agent(agent_id, agent_name, user_profile)
 
         if agent_task_id:
-            agenttask = agent_task.AgentTask(agent, action_agent.AmazonScraper(), initial_goal, seed)
+            agenttask = AgentTask.AgentTask(agent, Scraper.AmazonScraper(), initial_goal, seed)
             agenttask.id = agent_task_id
             agenttask.status = status
             agenttask.load_history()

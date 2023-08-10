@@ -1,84 +1,15 @@
-from enum import Enum
 import enum
-import uuid
-import json
-import sqlite3
-from urllib.request import Request, urlopen
+from enum import Enum
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
-class UserProfile:
-    def __init__(self, gender, age_from, age_to, location, interests, description=None):
-        self.id = uuid.uuid1()
-        self.gender     = gender
-        self.age_from   = age_from
-        self.age_to     = age_to
-        self.location   = location
-        self.interests   = interests
-        self.description = description
 
-    def persist(self):
-        conn = sqlite3.connect("storage.db")
-        c = conn.cursor()
+import sqlite3
+from urllib.request import Request, urlopen
 
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS user_profiles (
-                id TEXT PRIMARY KEY,
-                gender TEXT,
-                age_from INTEGER,
-                age_to INTEGER,
-                location TEXT,
-                interests TEXT,
-                description TEXT
-        )
-        ''')
+from Action import Action
+from Action import ActionType
 
-        interests_str = ', '.join(self.interests)
-        c.execute('''
-            INSERT INTO user_profiles (id, gender, age_from, age_to, location, interests, description)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            str(self.id), self.gender, self.age_from, self.age_to, self.location, interests_str, self.description
-        ))
-        conn.commit()
-
-    def __str__(self):
-        return f'Gender: {self.gender} | Age: {self.age_from}-{self.age_to} | Location: {self.location} | Interest: {self.interests} | Description: {self.description}'
-
-class PageType(Enum):
-    SEARCH_RESULTS  = enum.auto()
-    PRODUCT_DETAILS = enum.auto()
-
-class ActionType(Enum):
-    QUERY_GOAL                = enum.auto()
-    BACK_TO_SEARCH_RESULTS    = enum.auto()
-    CLICK_SEARCH_RESULT       = enum.auto()
-    CLICK_RECOMMENDED         = enum.auto()
-    BUY_NOW                   = enum.auto()
-
-class Action:
-    def __init__(self, action_type, context, target_url):
-        self.action_id   = uuid.uuid1()
-        self.action_type = action_type
-        self.context     = context
-        self.target_url  = target_url
-
-    def to_json(self):
-        return json.dumps({
-            'action_id': str(self.action_id),
-            'action_type': str(self.action_type),
-            'context': self.context,
-        }, indent=4)
-
-    def array_to_json(array):
-        options = ""
-        for action in array:
-            options += action.to_json() + "\n"
-
-        return options
-
-    def __str__(self):
-        return self.to_json()
 
 class Scraper:
     def __init__(self, scraper_name):
@@ -136,6 +67,12 @@ class Scraper:
             return response_content
 
         return None
+
+
+class PageType(Enum):
+    SEARCH_RESULTS  = enum.auto()
+    PRODUCT_DETAILS = enum.auto()
+
 
 class AmazonScraper(Scraper):
     def __init__(self):
@@ -311,37 +248,3 @@ class AmazonScraper(Scraper):
         encoded_params = '&'.join([f"{key}={value}" for key, value in query_params.items()])
         amazon_search_url = f"{base_url}?{encoded_params}"
         return amazon_search_url
-
-
-class AgentStatus(Enum):
-    NOT_STARTED = enum.auto()
-    IN_PROGRESS = enum.auto()
-    FINISHED    = enum.auto()
-
-
-class Agent:
-    def __init__(self, agent_id, name, user_profile):
-        self.id = agent_id
-        self.name = name
-        self.user_profile = user_profile
-
-    def persist(self):
-        conn = sqlite3.connect("storage.db")
-        c = conn.cursor()
-
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS agents (
-                id TEXT PRIMARY KEY,
-                name TEXT,
-                user_profile_id TEXT,
-                FOREIGN KEY (user_profile_id) REFERENCES user_profiles (id)
-            )
-        ''')
-
-        c.execute('''
-            INSERT INTO agents (id, name, user_profile_id)
-            VALUES (?, ?, ?)
-        ''', (
-            str(self.id), self.name, str(self.user_profile.id)
-        ))
-        conn.commit()
