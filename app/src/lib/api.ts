@@ -50,9 +50,15 @@ export class ApiClient {
 		}).then((res) => res.json());
 	}
 
-	async dispatchAgent(id: string): Promise<string> {
+	async dispatchAgentTask(id: string, goal:string, seed?: string): Promise<string> {
 		return fetch(`${this.baseUrl}/agents/${id}/dispatch`, {
-			method: 'POST'
+			method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                goal, seed
+            })
 		}).then((res) => res.text());
 	}
 }

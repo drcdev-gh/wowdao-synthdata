@@ -42,7 +42,6 @@
 	let location = '';
 	let interests = '';
 	let description = '';
-	let goal = '';
 
 	function handleCreate() {
 		const profile: Profile = {
@@ -56,7 +55,6 @@
 
 		const agent: Agent = {
 			name,
-			goal,
 			profile
 		};
 
@@ -89,17 +87,42 @@
 			});
 	}
 
-	function handleDispatchClick(agent: Agent) {
-		api.dispatchAgent(agent.id).then((status) => {
-			console.log(`Successfully dispatched to ${agent.id}`);
-			toast.push(`Dispatched job to agent: ${agent.name}`, {
+    let dispatchModalOpen = false;
+    let dispatchAgent;
+    let goal;
+    let seed;
+
+    function handleDispatchToggle(agent: Agent) {
+        dispatchAgent = agent;
+        dispatchModalOpen = !dispatchModalOpen;
+    }
+
+    function handleDispatchClose() {
+        dispatchAgent = null;
+        dispatchModalOpen = false;
+    }
+
+	function handleDispatchClick() {
+        console.log(dispatchAgent);
+		api.dispatchAgentTask(dispatchAgent.id, goal, seed).then((status) => {
+			toast.push(`Dispatched task for agent: ${dispatchAgent.name}`, {
 				theme: {
 					'--toastColor': 'mintcream',
 					'--toastBackground': 'rgba(72,187,120,0.9)',
 					'--toastBarBackground': '#2F855A'
 				}
 			});
-		});
+		}).catch((err) => {
+            toast.push(`Error: ${err}`, {
+                theme: {
+                    '--toastColor': 'mintcream',
+                    '--toastBackground': '#ffcbcb',
+                    '--toastBarBackground': '#ffb5b5'
+                }
+            });
+        }).finally(() => {
+            dispatchModalOpen = false;
+        });
 	}
 
 	const agents = getAgentsStore();
@@ -114,9 +137,14 @@
 	<meta name="description" content="Agents list." />
 </svelte:head>
 
+<Modal opened={dispatchModalOpen} title="Set goal for agent" on:close={handleDispatchClose}>
+    <TextInput label="Goal" bind:value={goal} radius="sm" />
+    <TextInput label="Seed" bind:value={seed} radius="sm" />
+    <Button class="mt-10" on:click={handleDispatchClick}>Start Task</Button>
+</Modal>
+
 <Modal {opened} title="Create Agent" on:close={handleClose}>
 	<TextInput label="Name" bind:value={name} radius="sm" />
-	<TextInput  label="Goal" bind:value={goal} radius="sm"/>
 	<RadioGroup label="Gender" bind:value={gender} items={genders} />
 	<TextInput label="Age From" bind:value={ageFrom} radius="sm" />
 	<TextInput label="Age To" bind:value={ageTo} radius="sm" />
@@ -144,25 +172,25 @@
 		<table class="table-auto text-center">
 			<thead>
 				<th class="px-8">Name</th>
+                <th class="px-8">Gender</th>
 				<th class="px-8">Age</th>
 				<th class="px-8">Location</th>
 				<th class="px-8">Interests</th>
 				<th class="px-8">Description</th>
-                <th class="px-8">Goal</th>
-				<th class="px-10">Dispatch</th>
+				<th class="px-10">New Task</th>
 			</thead>
 			<tbody>
 				{#each $agents as agent}
 					<tr>
 						<td class="px-5">{agent.name}</td>
+                        <td class="px-5">{agent.profile.gender}</td>
 						<td class="px-5">{agent.profile.ageFrom} - {agent.profile.ageTo}</td>
 						<td>{agent.profile.location}</td>
 						<td>{agent.profile.interests.join(', ')}</td>
 						<td>{agent.profile.description}</td>
-                        <td>{agent.goal}</td>
-						<td class="flex justify-center"
-							><Button on:click={() => handleDispatchClick(agent)}>Start Job</Button></td
-						>
+						<td class="flex justify-center">
+                            <Button on:click={() => handleDispatchToggle(agent)}>New Task</Button>
+                        </td>
 					</tr>
 				{/each}
 			</tbody>
