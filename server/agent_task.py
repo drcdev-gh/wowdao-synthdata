@@ -29,8 +29,59 @@ class AgentTask:
         self.seed = seed
         self.status = TaskStatus.NOT_STARTED
 
+    def persist(self):
+        # TODO: not persisting scraper
+        conn = sqlite3.connect("storage.db")
+        c = conn.cursor()
+
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS agent_tasks (
+                id TEXT PRIMARY KEY,
+                agent_id TEXT,
+                initial_goal TEXT,
+                seed TEXT,
+                status INTEGER,
+                FOREIGN KEY (agent_id) REFERENCES agents (id)
+            )
+        """)
+
+        c.execute('''
+            INSERT INTO agent_tasks (id, agent_id, initial_goal, seed, status)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            str(self.id), str(self.agent.id), self.initial_goal, self.seed, self.status.value
+        ))
+        conn.commit()
+
+    def load_history(self):
+        if len(self.actions_history) > 0:
+            return
+
+        conn = sqlite3.connect("storage.db")
+        c = conn.cursor()
+
+        c.execute('''
+            SELECT agent_id, task_id, action_id, action_type, context, target_url
+            FROM logs
+            WHERE task_id = ?
+        ''', (str(self.id),))
+
+        rows = c.fetchall()
+        history = []
+
+        print("Length rows " + str(len(rows)), flush=True)
+        for row in rows:
+            print("ROW " + str(row), flush=True)
+            agent_id, task_id, action_id, action_type, context, target_url = row
+            action = Action(action_id, action_type, context, target_url)
+            history.append(action)
+
+        conn.close()
+        print("Loaded history: " + str(history), flush=True)
+        self.actions_history = history
+
     def save_history(self):
-        conn = sqlite3.connect("webpages.db")
+        conn = sqlite3.connect("storage.db")
         c = conn.cursor()
 
         c.execute("""
@@ -53,6 +104,7 @@ class AgentTask:
                               str(action.action_type),
                               str(action.context),
                               str(action.target_url)))
+
         c.executemany("INSERT INTO logs(agent_id, task_id, action_id, action_type, context, target_url) VALUES (?, ?, ?, ?, ?, ?)",
                       task_logs)
         conn.commit()
@@ -81,6 +133,8 @@ class AgentTask:
 
         self.save_history()
         self.status = TaskStatus.FINISHED
+
+        # TODO: update status to db
 
     def choose_from_next_actions(self):
         if len(self.next_possible_actions) == 1:

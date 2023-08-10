@@ -4,6 +4,7 @@ from typing import List, Optional
 import uuid
 from fastapi import BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+import sqlite3
 
 import action_agent
 import agent_task
@@ -53,25 +54,20 @@ class TaskResponse(BaseModel):
 
     @classmethod
     def from_agent_task(cls, agent_task: agent_task.AgentTask):
-        return cls(id=agent_task.id,
-                   agent_id=agent_task.agent_id,
+        return cls(id=str(agent_task.id),
+                   agent_id=str(agent_task.agent.id),
                    status=str(agent_task.status))
-
 
 class AgentCreate(BaseModel):
     name: str
     profile: UserProfileData
 
-
 class AgentTaskMetaData(BaseModel):
     goal: str
     seed: Optional[str] = None
 
-
-# TODO: Make DBs persistent using sqlite.
 AGENT_DB: List[action_agent.Agent] = {}
 TASK_DB: List[agent_task.AgentTask] = {}
-
 
 @app.post("/agents", response_model=AgentResponse)
 def create_agent(agent_data: AgentCreate):
@@ -84,6 +80,8 @@ def create_agent(agent_data: AgentCreate):
                                              agent_data.profile.description)
     new_agent     = action_agent.Agent(agent_id, agent_data.name, profile)
     AGENT_DB[agent_id] = new_agent
+    profile.persist()
+    new_agent.persist()
     return AgentResponse.from_agent(new_agent)
 
 
@@ -113,7 +111,6 @@ def delete_agent(agent_id: str):
 def run_agent_task(task):
     task.execute()
 
-
 @app.post("/agents/{agent_id}/dispatch")
 async def dispatch_agent(agent_id: str, metadata: AgentTaskMetaData, background_tasks: BackgroundTasks):
     if agent_id not in AGENT_DB:
@@ -123,6 +120,7 @@ async def dispatch_agent(agent_id: str, metadata: AgentTaskMetaData, background_
     # TODO: support different types of scrape source.
     task = agent_task.AgentTask(agent, action_agent.AmazonScraper(), metadata.goal, metadata.seed)
     TASK_DB[task.id] = task
+    task.persist()
     background_tasks.add_task(run_agent_task, task)
     return "Successfully started"
 
@@ -141,5 +139,49 @@ async def get_logs():
     # TODO: comply with frontend types.
     ret = []
     for task_entry in TASK_DB.values():
+        print(task_entry.get_action_history(), flush=True)
         ret.extend(task_entry.get_action_history())
     return ret
+
+def table_exists(table_name):
+    conn = sqlite3.connect('storage.db')
+    c = conn.cursor()
+    c.execute('''
+        SELECT name FROM sqlite_master WHERE type='table' AND name=?
+    ''', (table_name,))
+    return c.fetchone() is not None
+
+def restore_instances():
+    if not (table_exists('agents') and table_exists('user_profiles')):
+        return
+    
+    conn = sqlite3.connect('storage.db')
+    c = conn.cursor()
+
+    c.execute('''
+    SELECT agents.id, agents.name, user_profiles.gender, user_profiles.age_from,
+           user_profiles.age_to, user_profiles.location, user_profiles.interests,
+           agent_tasks.id, agent_tasks.initial_goal, agent_tasks.seed, agent_tasks.status
+        FROM agents
+        JOIN user_profiles ON agents.user_profile_id = user_profiles.id
+        LEFT JOIN agent_tasks ON agent_tasks.agent_id = agents.id
+    ''')
+    rows = c.fetchall()
+    for row in rows:
+        agent_id, agent_name, gender, age_from, age_to, location, interests_str, agent_task_id, initial_goal, seed, status = row
+        interests = interests_str.split(', ')
+        user_profile = action_agent.UserProfile(gender, age_from, age_to, location, interests)
+        agent = action_agent.Agent(agent_id, agent_name, user_profile)
+
+        if agent_task_id:
+            agenttask = agent_task.AgentTask(agent, action_agent.AmazonScraper(), initial_goal, seed)
+            agenttask.status = status
+            agenttask.load_history()
+            if agent_task_id not in TASK_DB:
+                TASK_DB[agent_task_id] = agenttask
+        
+        if agent_id not in AGENT_DB:
+            AGENT_DB[agent_id] = agent
+
+# Call the restore_instances function
+restore_instances()
