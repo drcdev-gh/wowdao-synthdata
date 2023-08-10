@@ -139,8 +139,9 @@ async def get_logs():
     # TODO: comply with frontend types.
     ret = []
     for task_entry in TASK_DB.values():
-        print(task_entry.get_action_history(), flush=True)
-        ret.extend(task_entry.get_action_history())
+        if len(task_entry.actions_history) == 0:
+            continue
+        ret.extend(task_entry.actions_history)
     return ret
 
 def table_exists(table_name):
@@ -175,6 +176,7 @@ def restore_instances():
 
         if agent_task_id:
             agenttask = agent_task.AgentTask(agent, action_agent.AmazonScraper(), initial_goal, seed)
+            agenttask.id = agent_task_id
             agenttask.status = status
             agenttask.load_history()
             if agent_task_id not in TASK_DB:

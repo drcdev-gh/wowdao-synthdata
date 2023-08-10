@@ -61,6 +61,12 @@ class AgentTask:
         c = conn.cursor()
 
         c.execute('''
+            SELECT name FROM sqlite_master WHERE type='table' AND name=?
+        ''', ("logs",))
+        if c.fetchone() is None:
+            return
+
+        c.execute('''
             SELECT agent_id, task_id, action_id, action_type, context, target_url
             FROM logs
             WHERE task_id = ?
@@ -69,15 +75,13 @@ class AgentTask:
         rows = c.fetchall()
         history = []
 
-        print("Length rows " + str(len(rows)), flush=True)
         for row in rows:
-            print("ROW " + str(row), flush=True)
             agent_id, task_id, action_id, action_type, context, target_url = row
-            action = Action(action_id, action_type, context, target_url)
+            action = Action(action_type, context, target_url)
+            action.action_id = action_id
             history.append(action)
 
         conn.close()
-        print("Loaded history: " + str(history), flush=True)
         self.actions_history = history
 
     def save_history(self):
@@ -86,28 +90,23 @@ class AgentTask:
 
         c.execute("""
             CREATE TABLE IF NOT EXISTS logs (
-                id INTEGER PRIMARY KEY,
                 agent_id TEXT,
                 task_id TEXT,
-                action_id TEXT,
+                action_id TEXT PRIMARY KEY,
                 action_type TEXT,
                 context TEXT,
                 target_url TEXT
             )
         """)
 
-        task_logs = []
         for action in self.actions_history:
-            task_logs.append((str(self.agent.id),
-                              str(self.id),
-                              str(action.action_id),
-                              str(action.action_type),
-                              str(action.context),
-                              str(action.target_url)))
-
-        c.executemany("INSERT INTO logs(agent_id, task_id, action_id, action_type, context, target_url) VALUES (?, ?, ?, ?, ?, ?)",
-                      task_logs)
-        conn.commit()
+            c.execute('''
+                INSERT INTO logs (agent_id, task_id, action_id, action_type, context, target_url)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                str(self.agent.id), str(self.id), str(action.action_id), str(action.action_type.value), str(action.context), str(action.target_url)
+            ))
+            conn.commit()
         conn.close()
 
     def execute(self):
@@ -118,7 +117,7 @@ class AgentTask:
 
         while True:
             next_action = self.choose_from_next_actions()
-            logger.info(f"Agent: {self.agent.id} Task: {self.id} Action: {str(next_action)}")
+            #logger.info(f"Agent: {self.agent.id} Task: {self.id} Action: {str(next_action)}")
 
             if next_action is not None:
                 #print(next_action.to_json())

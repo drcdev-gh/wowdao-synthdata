@@ -66,7 +66,7 @@ class Action:
     def to_json(self):
         return json.dumps({
             'action_id': str(self.action_id),
-            'action_type': self.action_type.name,
+            'action_type': str(self.action_type),
             'context': self.context,
         }, indent=4)
 
