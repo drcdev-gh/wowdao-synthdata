@@ -129,21 +129,16 @@ async def dispatch_agent(agent_id: str, metadata: AgentTaskMetaData, background_
 
 @app.get("/tasks")
 async def get_tasks() -> List[TaskResponse]:
+    # TODO: comply with frontend types.
     ret = []
     for task_entry in TASK_DB.values():
         ret.append(TaskResponse.from_agent_task(task_entry))
     return ret
 
 
-@app.get("/tasks/{task_id}/logs")
-async def get_task_logs(task_id: str):
-    if task_id not in TASK_DB:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return TASK_DB[task_id].get_action_history()
-
-
-@app.get("/tasks/logs")
-async def get_all_task_logs():
+@app.get("/logs")
+async def get_logs():
+    # TODO: comply with frontend types.
     ret = []
     for task_entry in TASK_DB.values():
         ret.extend(task_entry.get_action_history())
