@@ -240,7 +240,7 @@ class AmazonScraper(Scraper):
             num_ratings = ratings_span.get_text().replace(" ratings", "").replace(",", "")
             product_description = self.add_to_str(product_description, "Number Ratings", num_ratings)
 
-        return [Action(ActionType.BUY_NOW, product_description, None)]
+        return [Action(ActionType.BUY_NOW, product_description, page)]
 
     def generate_amazon_search_url(self, search_query):
         base_url = "https://www.amazon.com/s"
