@@ -128,6 +128,10 @@ class AmazonScraper(Scraper):
             title_element = result.find("span", class_="a-size-base-plus")
             escaped_text = title_element.get_text() if title_element else None
 
+            if title_element is None:
+                title_element = soup.find('h2', class_='a-size-mini')
+                escaped_text = title_element.get_text(strip=True)
+
             # Extract price
             price_element = result.find("span", class_="a-offscreen")
             price = price_element.get_text() if price_element else None
