@@ -18,6 +18,17 @@
     });
 </script>
 
+<style>
+    table, th, td {
+        border: 1px solid #ccc;
+    }
+
+    th {
+        background-color: #393e46;
+        color: #fff;
+    }
+</style>
+
 <svelte:head>
 	<title>Tasks</title>
 	<meta name="description" content="Tasks" />
@@ -25,9 +36,9 @@
 
 <section class="flex">
 	<Container>
-		<Center><h1 class="text-3xl font-bold my-50">Tasks</h1></Center>
+		<h1 class="text-3xl font-bold my-50">Tasks</h1>
 		<Divider class="my-5" />
-        <table class="table table-fixed text-center">
+        <table class="table table-fixed text-center border-collapse text-sm border-solid border w-full">
             <thead class="text-center">
                 <tr>
                     <th class="w-32">Id</th>
@@ -35,15 +46,15 @@
                     <th class="w-32">Status</th>
                 </tr>
             </thead>
+            <tbody class="text-center">
+                {#each tasks as task}
+                    <tr>
+                        <td class="w-32">{task.id}</td>
+                        <td class="w-48">{task.goal}</td>
+                        <td class="w-32">{task.status}</td>
+                    </tr>
+                {/each}
+            </tbody>
         </table>
-        <tbody class="text-center">
-            {#each tasks as task}
-                <tr>
-                    <td class="w-32">{task.id}</td>
-                    <td class="w-48">{task.goal}</td>
-                    <td class="w-32">{task.status}</td>
-                </tr>
-            {/each}
-        </tbody>
 	</Container>
 </section>
