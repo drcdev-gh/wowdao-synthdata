@@ -17,22 +17,22 @@ export interface Agent {
 }
 
 export interface Log {
-    timestamp: number;
-    agent_id: string;
-    task_id: string;
-    action_id: string;
-    action_type: string;
-    goal: string;
-    seed: string;
-    url: string;
-    step: number;
+	timestamp: number;
+	agent_id: string;
+	task_id: string;
+	action_id: string;
+	action_type: string;
+	goal: string;
+	seed: string;
+	url: string;
+	step: number;
 }
 
 export interface Task {
-    id: string;
-    goal: string;
-    seed: string;
-    status: string;
+	id: string;
+	goal: string;
+	seed: string;
+	status: string;
 }
 
 export class ApiClient {
@@ -65,25 +65,26 @@ export class ApiClient {
 		}).then((res) => res.json());
 	}
 
-	async dispatchAgentTask(id: string, goal:string, seed?: string): Promise<string> {
+	async dispatchAgentTask(id: string, goal: string, seed?: string): Promise<string> {
 		return fetch(`${this.baseUrl}/agents/${id}/dispatch`, {
 			method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                goal, seed
-            })
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				goal,
+				seed
+			})
 		}).then((res) => res.text());
 	}
 
-    async getLogs(): Promise<Log[]> {
-        return fetch(`${this.baseUrl}/logs`).then((res) => res.json());
-    }
+	async getLogs(): Promise<Log[]> {
+		return fetch(`${this.baseUrl}/logs`).then((res) => res.json());
+	}
 
-    async getTasks(): Promise<Task[]> {
-        return fetch(`${this.baseUrl}/tasks`).then((res) => res.json());
-    }
+	async getTasks(): Promise<Task[]> {
+		return fetch(`${this.baseUrl}/tasks`).then((res) => res.json());
+	}
 }
 
 export const apiClient = new ApiClient(PUBLIC_API_BASE_URL);

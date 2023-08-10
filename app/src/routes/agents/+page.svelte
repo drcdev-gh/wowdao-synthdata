@@ -60,7 +60,8 @@
 
 		console.log(`Creating agent: ${JSON.stringify(agent)}`);
 
-		agents.create(agent)
+		agents
+			.create(agent)
 			.then((agent) => {
 				console.log(`Successfully created: ${JSON.stringify(agent)}`);
 				toast.push(`Successfully created: ${agent.name}`, {
@@ -87,42 +88,46 @@
 			});
 	}
 
-    let dispatchModalOpen = false;
-    let dispatchAgent;
-    let goal;
-    let seed;
+	let dispatchModalOpen = false;
+	let dispatchAgent;
+	let goal;
+	let seed;
 
-    function handleDispatchToggle(agent: Agent) {
-        dispatchAgent = agent;
-        dispatchModalOpen = !dispatchModalOpen;
-    }
+	function handleDispatchToggle(agent: Agent) {
+		dispatchAgent = agent;
+		dispatchModalOpen = !dispatchModalOpen;
+	}
 
-    function handleDispatchClose() {
-        dispatchAgent = null;
-        dispatchModalOpen = false;
-    }
+	function handleDispatchClose() {
+		dispatchAgent = null;
+		dispatchModalOpen = false;
+	}
 
 	function handleDispatchClick() {
-        console.log(dispatchAgent);
-		api.dispatchAgentTask(dispatchAgent.id, goal, seed).then((status) => {
-			toast.push(`Dispatched task for agent: ${dispatchAgent.name}`, {
-				theme: {
-					'--toastColor': 'mintcream',
-					'--toastBackground': 'rgba(72,187,120,0.9)',
-					'--toastBarBackground': '#2F855A'
-				}
+		console.log(dispatchAgent);
+		api
+			.dispatchAgentTask(dispatchAgent.id, goal, seed)
+			.then((status) => {
+				toast.push(`Dispatched task for agent: ${dispatchAgent.name}`, {
+					theme: {
+						'--toastColor': 'mintcream',
+						'--toastBackground': 'rgba(72,187,120,0.9)',
+						'--toastBarBackground': '#2F855A'
+					}
+				});
+			})
+			.catch((err) => {
+				toast.push(`Error: ${err}`, {
+					theme: {
+						'--toastColor': 'mintcream',
+						'--toastBackground': '#ffcbcb',
+						'--toastBarBackground': '#ffb5b5'
+					}
+				});
+			})
+			.finally(() => {
+				dispatchModalOpen = false;
 			});
-		}).catch((err) => {
-            toast.push(`Error: ${err}`, {
-                theme: {
-                    '--toastColor': 'mintcream',
-                    '--toastBackground': '#ffcbcb',
-                    '--toastBarBackground': '#ffb5b5'
-                }
-            });
-        }).finally(() => {
-            dispatchModalOpen = false;
-        });
 	}
 
 	const agents = getAgentsStore();
@@ -138,9 +143,9 @@
 </svelte:head>
 
 <Modal opened={dispatchModalOpen} title="Set goal for agent" on:close={handleDispatchClose}>
-    <TextInput label="Goal" bind:value={goal} radius="sm" />
-    <TextInput label="Seed" bind:value={seed} radius="sm" />
-    <Button class="mt-10" on:click={handleDispatchClick}>Start Task</Button>
+	<TextInput label="Goal" bind:value={goal} radius="sm" />
+	<TextInput label="Seed" bind:value={seed} radius="sm" />
+	<Button class="mt-10" on:click={handleDispatchClick}>Start Task</Button>
 </Modal>
 
 <Modal {opened} title="Create Agent" on:close={handleClose}>
@@ -172,7 +177,7 @@
 		<table class="table-auto text-center">
 			<thead>
 				<th class="px-8">Name</th>
-                <th class="px-8">Gender</th>
+				<th class="px-8">Gender</th>
 				<th class="px-8">Age</th>
 				<th class="px-8">Location</th>
 				<th class="px-8">Interests</th>
@@ -183,14 +188,14 @@
 				{#each $agents as agent}
 					<tr>
 						<td class="px-5">{agent.name}</td>
-                        <td class="px-5">{agent.profile.gender}</td>
+						<td class="px-5">{agent.profile.gender}</td>
 						<td class="px-5">{agent.profile.ageFrom} - {agent.profile.ageTo}</td>
 						<td>{agent.profile.location}</td>
 						<td>{agent.profile.interests.join(', ')}</td>
 						<td>{agent.profile.description}</td>
 						<td class="flex justify-center">
-                            <Button on:click={() => handleDispatchToggle(agent)}>New Task</Button>
-                        </td>
+							<Button on:click={() => handleDispatchToggle(agent)}>New Task</Button>
+						</td>
 					</tr>
 				{/each}
 			</tbody>

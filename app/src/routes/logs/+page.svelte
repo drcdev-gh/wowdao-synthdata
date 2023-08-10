@@ -1,11 +1,11 @@
 <script>
-    import { onMount } from 'svelte'
-    import { Container } from '@svelteuidev/core'
-    import SvelteTable from 'svelte-table'
+	import { onMount } from 'svelte';
+	import { Container } from '@svelteuidev/core';
+	import SvelteTable from 'svelte-table';
 
-    onMount(async function() {
-        // TODO: Load logs to table.
-    });
+	onMount(async function () {
+		// TODO: Load logs to table.
+	});
 </script>
 
 <svelte:head>
@@ -14,7 +14,7 @@
 </svelte:head>
 
 <section class="flex flex-col justify-center grow">
-    <Container>
-        <h1 class="text-3xl font-bold">Logs</h1>
-    </Container>
+	<Container>
+		<h1 class="text-3xl font-bold">Logs</h1>
+	</Container>
 </section>

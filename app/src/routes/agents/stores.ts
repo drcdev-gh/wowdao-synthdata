@@ -13,7 +13,7 @@ export function getAgentsStore() {
 		create: async (agent: Agent): Promise<Agent> => {
 			const newAgent = await api.createAgent(agent);
 			update((agents) => [...agents, newAgent]);
-            return newAgent;
+			return newAgent;
 		},
 		delete: async (agent: Agent) => {
 			if (!agent.id) {
