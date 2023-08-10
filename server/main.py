@@ -85,7 +85,6 @@ class TaskResponse(BaseModel):
 
     @classmethod
     def from_agent_task(cls, agent_task: AgentTask.AgentTask):
-        print(agent_task.status, str(agent_task.status))
         return cls(id=str(agent_task.id),
                    goal=agent_task.initial_goal,
                    status=AgentTask.TaskStatus(agent_task.status).name)
