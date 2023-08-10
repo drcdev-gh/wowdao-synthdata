@@ -177,7 +177,7 @@ class AgentTask:
         - Interests: {interests}
 
         Please think carefully how users with different profiles interact with the platform when making e-commerce purchases.
-        Tell me which option you are taking by responding with the corresponding action ID only.
+        Tell me which option you are taking by responding with the corresponding action ID. You should only reply with ONE action id, no other characters or words.
         """
         prompt = PromptTemplate.from_template(base_prompt)
         chain  = LLMChain(llm=OpenAI(max_tokens=-1, temperature=0.3), prompt=prompt, verbose=1)
@@ -207,6 +207,7 @@ class AgentTask:
             if str(action.action_id).strip() == str(action_id).strip():
                 return action
 
+        print("Something went wrong with getting the response from the LLM. The response was: " + action_id)
         return None
 
     def get_action_history(self):
