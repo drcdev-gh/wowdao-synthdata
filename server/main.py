@@ -2,11 +2,11 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 import uuid
-import asyncio
 from fastapi import BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
 import action_agent
+import agent_task
 
 app = FastAPI()
 app.add_middleware(
@@ -16,12 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class AgentDbEntry:
-    def __init__(self, api_agent, agent):
-        self.api_agent = api_agent
-        self.agent     = agent
-
-class Profile(BaseModel):
+class UserProfileData(BaseModel):
     gender: str
     ageFrom: int
     ageTo: int
@@ -29,86 +24,126 @@ class Profile(BaseModel):
     interests: List[str]
     description: Optional[str] = None
 
-class Agent(BaseModel):
+    @classmethod
+    def from_user_profile(cls, user_profile: action_agent.UserProfile):
+        return cls(
+            gender=user_profile.gender,
+            ageFrom=user_profile.age_from,
+            ageTo=user_profile.age_to,
+            location=user_profile.location,
+            interests=user_profile.interests,
+            description=user_profile.description
+        )
+
+
+class AgentResponse(BaseModel):
     id: Optional[str] = None
     name: str
-    goal: str
-    profile: Profile
+    profile: UserProfileData
+
+    @classmethod
+    def from_agent(cls, agent: action_agent.Agent):
+        return cls(id=agent.id, name=agent.name, profile=UserProfileData.from_user_profile(agent.user_profile))
+
+
+class TaskResponse(BaseModel):
+    id: str
+    agent_id: str
+    status: str
+
+    @classmethod
+    def from_agent_task(cls, agent_task: agent_task.AgentTask):
+        return cls(id=agent_task.id,
+                   agent_id=agent_task.agent_id,
+                   status=str(agent_task.status))
+
 
 class AgentCreate(BaseModel):
     name: str
+    profile: UserProfileData
+
+
+class AgentTaskMetaData(BaseModel):
     goal: str
-    profile: Profile
+    seed: Optional[str] = None
 
-class AgentUpdate(BaseModel):
-    name: str
-    profile: Profile
 
-agent_db = {}
+# TODO: Make DBs persistent using sqlite.
+AGENT_DB: List[action_agent.Agent] = {}
+TASK_DB: List[agent_task.AgentTask] = {}
 
-@app.post("/agents", response_model=Agent)
-def create_agent(agent: AgentCreate):
+
+@app.post("/agents", response_model=AgentResponse)
+def create_agent(agent_data: AgentCreate):
     agent_id      = str(uuid.uuid1())
-    new_api_agent = Agent(id=agent_id, **agent.dict())
-
     scraper       = action_agent.AmazonScraper()
-    up            = action_agent.UserProfile(agent.profile.gender,
-                                             agent.profile.ageFrom,
-                                             agent.profile.ageTo,
-                                             agent.profile.location,
-                                             agent.profile.interests)
-    new_agent     = action_agent.Agent(agent_id, up, agent.goal, scraper)
+    profile       = action_agent.UserProfile(agent_data.profile.gender,
+                                             agent_data.profile.ageFrom,
+                                             agent_data.profile.ageTo,
+                                             agent_data.profile.location,
+                                             agent_data.profile.interests)
+    new_agent     = action_agent.Agent(agent_id, agent_data.name, profile, scraper)
+    AGENT_DB[agent_id] = new_agent
+    return AgentResponse.from_agent(new_agent)
 
-    agent_db[agent_id] = AgentDbEntry(new_api_agent, new_agent)
-    return new_api_agent
 
-@app.get("/agents", response_model=List[Agent])
+@app.get("/agents", response_model=List[AgentResponse])
 def get_agents():
     ret = []
-    for agent_entry in agent_db.values():
-        ret.append(agent_entry.api_agent)
-
+    for agent_entry in AGENT_DB.values():
+        ret.append(AgentResponse.from_agent(agent_entry))
     return ret
 
-@app.get("/agents/{agent_id}", response_model=Agent)
-def get_agent(agent_id: str):
-    if agent_id not in agent_db:
-        raise HTTPException(status_code=404, detail="Agent not found")
-    return agent_db[agent_id].api_agent
 
-@app.delete("/agents/{agent_id}", response_model=Agent)
-def delete_agent(agent_id: str):
-    if agent_id not in agent_db:
+@app.get("/agents/{agent_id}", response_model=AgentResponse)
+def get_agent(agent_id: str):
+    if agent_id not in AGENT_DB:
         raise HTTPException(status_code=404, detail="Agent not found")
-    deleted_agent = agent_db.pop(agent_id)
-    # TODO: make sure that the job is stopped?
+    return AgentResponse.from_agent(AGENT_DB[agent_id])
+
+
+@app.delete("/agents/{agent_id}", response_model=AgentResponse)
+def delete_agent(agent_id: str):
+    if agent_id not in AGENT_DB:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    deleted_agent = AGENT_DB.pop(agent_id)
     return deleted_agent
 
-@app.get("/agents/{agent_id}/logs")
-def get_agent_log(agent_id: str):
-    if agent_id not in agent_db:
-        raise HTTPException(status_code=404, detail="Agent not found")
-    return agent_db[agent_id].agent.actions_history
 
-@app.get("/agents/{agent_id}/status")
-def get_agent_status(agent_id: str):
-    if agent_id not in agent_db:
-        raise HTTPException(status_code=404, detail="Agent not found")
-    return agent_db[agent_id].agent.status
+def run_agent_task(task):
+    task.execute()
 
-def run_execute(agent_id):
-    agent_db[agent_id].agent.execute()
 
 @app.post("/agents/{agent_id}/dispatch")
-async def dispatch_agent(agent_id: str, background_tasks: BackgroundTasks):
-    if agent_id not in agent_db:
+async def dispatch_agent(agent_id: str, agent_task: AgentTaskMetaData, background_tasks: BackgroundTasks):
+    if agent_id not in AGENT_DB:
         raise HTTPException(status_code=404, detail="Agent not found")
 
-    # if agent_db[agent_id].agent.status is action_agent.AgentStatus.IN_PROGRESS:
-    #     return "Already running"
-    # if agent_db[agent_id].agent.status is action_agent.AgentStatus.FINISHED:
-    #     return "Already done"
-    #
-    background_tasks.add_task(run_execute, agent_id=agent_id)
-
+    agent = AGENT_DB[agent_id]
+    task = agent_task.AgentTask(agent, agent_task.goal, agent_task.seed)
+    TASK_DB[task.id] = task
+    background_tasks.add_task(run_agent_task, task)
     return "Successfully started"
+
+
+@app.get("/tasks")
+async def get_tasks() -> List[TaskResponse]:
+    ret = []
+    for task_entry in TASK_DB.values():
+        ret.append(TaskResponse.from_agent_task(task_entry))
+    return ret
+
+
+@app.get("/tasks/{task_id}/logs")
+async def get_task_logs(task_id: str):
+    if task_id not in TASK_DB:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return TASK_DB[task_id].get_action_history()
+
+
+@app.get("/tasks/logs")
+async def get_all_task_logs():
+    ret = []
+    for task_entry in TASK_DB.values():
+        ret.extend(task_entry.get_action_history())
+    return ret

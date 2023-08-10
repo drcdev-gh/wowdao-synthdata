@@ -1,6 +1,3 @@
-from langchain import LLMChain
-from langchain.llms import OpenAI
-from langchain.prompts import PromptTemplate
 from enum import Enum
 import enum
 import uuid
@@ -11,15 +8,17 @@ from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
 class UserProfile:
-    def __init__(self, gender, age_from, age_to, location, interest):
+    def __init__(self, gender, age_from, age_to, location, interests, description=None):
         self.gender     = gender
         self.age_from   = age_from
         self.age_to     = age_to
         self.location   = location
-        self.interest   = interest
+        self.interests   = interests
+        self.description = description
 
     def __str__(self):
-        return f'Gender: {self.gender} | Age: {self.age_from}-{self.age_to} | Location: {self.location} | Interest: {self.interest}'
+        return f'Gender: {self.gender} | Age: {self.age_from}-{self.age_to} | Location: {self.location} | Interest: {self.interests} | Description: {self.description}'
+
 
 class PageType(Enum):
     SEARCH_RESULTS  = enum.auto()
@@ -290,96 +289,16 @@ class AmazonScraper(Scraper):
         amazon_search_url = f"{base_url}?{encoded_params}"
         return amazon_search_url
 
+
 class AgentStatus(Enum):
     NOT_STARTED = enum.auto()
     IN_PROGRESS = enum.auto()
     FINISHED    = enum.auto()
 
+
 class Agent:
-    def __init__(self, agent_id, user_profile, initial_goal, scraper):
+    def __init__(self, agent_id, name, user_profile, scraper):
         self.id = agent_id
+        self.name = name
         self.user_profile = user_profile
-        self.initial_goal = initial_goal
-        self.actions_history = []
-        self.next_possible_actions = []
         self.scraper: Scraper = scraper
-        self.status = AgentStatus.NOT_STARTED
-
-    def execute(self):
-        self.status = AgentStatus.IN_PROGRESS
-
-        if len(self.actions_history) == 0:
-            self.next_possible_actions = self.scraper.get_initial_actions(self.initial_goal)
-
-        while True:
-            next_action = self.choose_from_next_actions()
-            print(f"Agent: {self.id} action: {str(next_action)}")
-
-            if next_action is not None:
-                #print(next_action.to_json())
-                self.actions_history.append(next_action)
-
-            if next_action is not None and next_action.action_type is not ActionType.BUY_NOW:
-                self.next_possible_actions = self.scraper.scrape_page_into_possible_actions(next_action.target_url)
-                #print(Action.array_to_json(self.next_possible_actions))
-            else:
-                print(f"Agent: {str(self.user_profile)} FINISHED with {str(next_action.action_type)}")
-                break
-
-        self.status = AgentStatus.FINISHED
-
-    def choose_from_next_actions(self):
-        if len(self.next_possible_actions) == 1:
-            return self.next_possible_actions[0]
-
-        base_prompt = """
-        I am trying to create synthetic data with LLMs for ecommerce startups.
-        More specifically, I am telling you to act as a consumer with this goal: {goal}
-        You are currently browsing the ecommerce webpage and are presented with these options:
-        {options}
-
-        You have previously taken the following actions. You want to choose the best option to buy (with a BUY_NOW action) after a maximum of {steps} steps:
-        {previous_actions}
-
-        The actions should be taken from the point of view of a user with the following profile:
-        - Gender: {gender}
-        - Age Range: {age_from} - {age_to}
-        - Location: {location}
-        - Interest: {interest}
-
-        Please think carefully how users with different profiles interact with the platform when making e-commerce purchases.
-        Tell me which option you are taking by responding with the corresponding action ID only.
-        """
-        prompt = PromptTemplate.from_template(base_prompt)
-        chain  = LLMChain(llm=OpenAI(max_tokens=-1), prompt=prompt)#, verbose=1)
-
-        options          = Action.array_to_json(self.next_possible_actions)
-        previous_actions = Action.array_to_json(self.actions_history)
-
-        result = chain.run(
-                {"goal":self.initial_goal, "options":options,
-                "steps":"10","previous_actions":previous_actions,
-                "gender":self.user_profile.gender,
-                "age_from":self.user_profile.age_from, "age_to":self.user_profile.age_to,
-                "location":self.user_profile.location, "interest":self.user_profile.interest})
-
-        return self.find_next_action_by_id(result)
-
-    def find_next_action_by_id(self, action_id):
-        if len(self.next_possible_actions) == 0:
-            return None
-
-        for action in self.next_possible_actions:
-            if str(action.action_id).strip() == str(action_id).strip():
-                return action
-
-        return None
-
-###
-
-#scraper = AmazonScraper()
-#up      = UserProfile("Male", "18", "35", "United States", "Hiking")
-#agent   = Agent(up, "hiking shoes", scraper)
-#agent.execute()
-#
-#print(Action.array_to_json(agent.actions_history))
