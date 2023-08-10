@@ -5,6 +5,7 @@
 		Button,
 		Center,
 		Container,
+		Divider,
 		Modal,
 		Group,
 		NativeSelect,
@@ -173,16 +174,19 @@
 
 <section class="flex flex-col justify-center grow">
 	<Container>
-		<Center><Button on:click={toggleOpen}>Create Agent</Button></Center>
+		<Button on:click={toggleOpen}>Create Agent</Button>
+		<Divider class="my-5" />
 		<table class="table-auto text-center">
 			<thead>
-				<th class="px-8">Name</th>
-				<th class="px-8">Gender</th>
-				<th class="px-8">Age</th>
-				<th class="px-8">Location</th>
-				<th class="px-8">Interests</th>
-				<th class="px-8">Description</th>
-				<th class="px-10">New Task</th>
+                <tr>
+                    <th class="px-8">Name</th>
+                    <th class="px-8">Gender</th>
+                    <th class="px-8">Age</th>
+                    <th class="px-8">Location</th>
+                    <th class="px-8">Interests</th>
+                    <th class="px-8">Description</th>
+                    <th class="px-10">New Task</th>
+                </tr>
 			</thead>
 			<tbody>
 				{#each $agents as agent}
