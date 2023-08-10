@@ -85,9 +85,10 @@ class TaskResponse(BaseModel):
 
     @classmethod
     def from_agent_task(cls, agent_task: AgentTask.AgentTask):
+        print(agent_task.status, str(agent_task.status))
         return cls(id=str(agent_task.id),
                    goal=agent_task.initial_goal,
-                   status=str(agent_task.status))
+                   status=AgentTask.TaskStatus(agent_task.status).name)
 
 class AgentCreate(BaseModel):
     name: str
@@ -183,7 +184,7 @@ def table_exists(table_name):
 def restore_instances():
     if not (table_exists('agents') and table_exists('user_profiles')):
         return
-    
+
     conn = sqlite3.connect('storage.db')
     c = conn.cursor()
 
@@ -209,7 +210,7 @@ def restore_instances():
             agenttask.load_history()
             if agent_task_id not in TASK_DB:
                 TASK_DB[agent_task_id] = agenttask
-        
+
         if agent_id not in AGENT_DB:
             AGENT_DB[agent_id] = agent
 
