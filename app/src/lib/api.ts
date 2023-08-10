@@ -23,7 +23,6 @@ export interface Log {
 	action_id: string;
 	action_type: string;
 	goal: string;
-	seed: string;
 	url: string;
 	step: number;
 }
@@ -31,7 +30,6 @@ export interface Log {
 export interface Task {
 	id: string;
 	goal: string;
-	seed: string;
 	status: string;
 }
 

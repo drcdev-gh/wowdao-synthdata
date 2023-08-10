@@ -19,18 +19,13 @@ class TaskStatus(enum.Enum):
     FINISHED    = enum.auto()
 
 class AgentTask:
-    def __init__(self, agent: Agent, scraper: Scraper, initial_goal, seed=None):
+    def __init__(self, agent: Agent, scraper: Scraper, initial_goal):
         self.id = uuid.uuid1()
         self.agent = agent
         self.initial_goal = initial_goal
         self.actions_history = []
         self.next_possible_actions = []
         self.scraper: Scraper = scraper
-        # TODO needed?
-        if seed is None:
-            self.seed = uuid.uuid1()
-        else:
-            self.seed = seed
         self.status = TaskStatus.NOT_STARTED
 
     def persist(self):
@@ -43,17 +38,16 @@ class AgentTask:
                 id TEXT PRIMARY KEY,
                 agent_id TEXT,
                 initial_goal TEXT,
-                seed TEXT,
                 status INTEGER,
                 FOREIGN KEY (agent_id) REFERENCES agents (id)
             )
         """)
 
         c.execute('''
-            INSERT INTO agent_tasks (id, agent_id, initial_goal, seed, status)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO agent_tasks (id, agent_id, initial_goal, status)
+            VALUES (?, ?, ?, ?)
         ''', (
-            str(self.id), str(self.agent.id), self.initial_goal, str(self.seed), self.status.value
+            str(self.id), str(self.agent.id), self.initial_goal, self.status.value
         ))
         conn.commit()
 

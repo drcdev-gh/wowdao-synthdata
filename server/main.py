@@ -58,7 +58,6 @@ class LogResponse(BaseModel):
     action_id: str
     action_type: str
     goal: str
-    seed: str
     url: str
     step: int
 
@@ -76,21 +75,18 @@ class LogResponse(BaseModel):
                    action_id=str(action_history_entry.action_id),
                    action_type=str(action_history_entry.action_type),
                    goal=task.initial_goal,
-                   seed=str(task.seed),
                    url=str(action_history_entry.target_url),
                    step=step)
 
 class TaskResponse(BaseModel):
     id: str
     goal: str
-    seed: str
     status: str
 
     @classmethod
     def from_agent_task(cls, agent_task: AgentTask.AgentTask):
         return cls(id=str(agent_task.id),
                    goal=agent_task.initial_goal,
-                   seed=str(agent_task.seed),
                    status=str(agent_task.status))
 
 class AgentCreate(BaseModel):
@@ -99,7 +95,6 @@ class AgentCreate(BaseModel):
 
 class AgentTaskMetaData(BaseModel):
     goal: str
-    seed: Optional[str] = None
 
 AGENT_DB: List[Agent.Agent] = {}
 TASK_DB: List[AgentTask.AgentTask] = {}
@@ -153,7 +148,7 @@ async def dispatch_agent(agent_id: str, metadata: AgentTaskMetaData, background_
 
     agent = AGENT_DB[agent_id]
     # TODO: support different types of scrape source.
-    task = AgentTask.AgentTask(agent, Scraper.AmazonScraper(), metadata.goal, metadata.seed)
+    task = AgentTask.AgentTask(agent, Scraper.AmazonScraper(), metadata.goal)
     TASK_DB[task.id] = task
     task.persist()
     background_tasks.add_task(run_agent_task, task)
@@ -195,20 +190,20 @@ def restore_instances():
     c.execute('''
     SELECT agents.id, agents.name, user_profiles.gender, user_profiles.age_from,
            user_profiles.age_to, user_profiles.location, user_profiles.interests,
-           agent_tasks.id, agent_tasks.initial_goal, agent_tasks.seed, agent_tasks.status
+           agent_tasks.id, agent_tasks.initial_goal, agent_tasks.status
         FROM agents
         JOIN user_profiles ON agents.user_profile_id = user_profiles.id
         LEFT JOIN agent_tasks ON agent_tasks.agent_id = agents.id
     ''')
     rows = c.fetchall()
     for row in rows:
-        agent_id, agent_name, gender, age_from, age_to, location, interests_str, agent_task_id, initial_goal, seed, status = row
+        agent_id, agent_name, gender, age_from, age_to, location, interests_str, agent_task_id, initial_goal,status = row
         interests = interests_str.split(', ')
         user_profile = UserProfile.UserProfile(gender, age_from, age_to, location, interests)
         agent = Agent.Agent(agent_id, agent_name, user_profile)
 
         if agent_task_id:
-            agenttask = AgentTask.AgentTask(agent, Scraper.AmazonScraper(), initial_goal, seed)
+            agenttask = AgentTask.AgentTask(agent, Scraper.AmazonScraper(), initial_goal)
             agenttask.id = agent_task_id
             agenttask.status = status
             agenttask.load_history()
