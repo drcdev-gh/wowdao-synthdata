@@ -2,6 +2,7 @@ from langchain import LLMChain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from enum import Enum
+import enum
 import uuid
 import json
 import sqlite3
@@ -21,15 +22,15 @@ class UserProfile:
         return f'Gender: {self.gender} | Age: {self.age_from}-{self.age_to} | Location: {self.location} | Interest: {self.interest}'
 
 class PageType(Enum):
-    SEARCH_RESULTS  = 1
-    PRODUCT_DETAILS = 2
+    SEARCH_RESULTS  = enum.auto()
+    PRODUCT_DETAILS = enum.auto()
 
 class ActionType(Enum):
-    QUERY_GOAL                = 1
-    BACK_TO_SEARCH_RESULTS    = 2
-    CLICK_SEARCH_RESULT       = 3
-    CLICK_RECOMMENDED         = 4
-    BUY_NOW                   = 5
+    QUERY_GOAL                = enum.auto()
+    BACK_TO_SEARCH_RESULTS    = enum.auto()
+    CLICK_SEARCH_RESULT       = enum.auto()
+    CLICK_RECOMMENDED         = enum.auto()
+    BUY_NOW                   = enum.auto()
 
 class Action:
     def __init__(self, action_type, context, target_url):
@@ -146,7 +147,7 @@ class AmazonScraper(Scraper):
 
         soup = BeautifulSoup(content, "lxml")
         search_results = soup.find_all(attrs={"data-component-type": "s-search-result"})
-        for index, result in enumerate(search_results, start=1):
+        for _, result in enumerate(search_results, start=1):
             # Extract HREF URL
             href_element = result.find("a", class_="a-link-normal")
             if href_element:
@@ -263,7 +264,7 @@ class AmazonScraper(Scraper):
             price_elements = price_range_span.find_all("span", class_="a-price")
             for price_element in price_elements:
                 price = price_element.find("span", class_="a-offscreen").get_text()
-                product_description = self.add_to_str(product_description, "Price", bullet_points)
+                product_description = self.add_to_str(product_description, "Price", price)
 
         # Find the span element with class "reviewCountTextLinkedHistogram"
         average_review_span = soup.find("span", class_="reviewCountTextLinkedHistogram")
@@ -290,9 +291,9 @@ class AmazonScraper(Scraper):
         return amazon_search_url
 
 class AgentStatus(Enum):
-    NOT_STARTED = 1
-    IN_PROGRESS = 2
-    FINISHED    = 3
+    NOT_STARTED = enum.auto()
+    IN_PROGRESS = enum.auto()
+    FINISHED    = enum.auto()
 
 class Agent:
     def __init__(self, agent_id, user_profile, initial_goal, scraper):
