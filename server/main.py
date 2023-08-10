@@ -96,6 +96,7 @@ class AgentCreate(BaseModel):
 
 class AgentTaskMetaData(BaseModel):
     goal: str
+    n: int
 
 AGENT_DB: List[Agent.Agent] = {}
 TASK_DB: List[AgentTask.AgentTask] = {}
@@ -149,10 +150,11 @@ async def dispatch_agent(agent_id: str, metadata: AgentTaskMetaData, background_
 
     agent = AGENT_DB[agent_id]
     # TODO: support different types of scrape source.
-    task = AgentTask.AgentTask(agent, Scraper.AmazonScraper(), metadata.goal)
-    TASK_DB[task.id] = task
-    task.persist()
-    background_tasks.add_task(run_agent_task, task)
+    for _ in range(metadata.n):
+        task = AgentTask.AgentTask(agent, Scraper.AmazonScraper(), metadata.goal)
+        TASK_DB[task.id] = task
+        task.persist()
+        background_tasks.add_task(run_agent_task, task)
     return "Successfully started"
 
 

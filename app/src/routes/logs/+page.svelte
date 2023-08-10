@@ -4,6 +4,7 @@
     border-collapse: collapse;
     border: 1px solid #ccc;
     margin-top: 20px;
+    font-size: 0.8em;
   }
 
   th, td {
@@ -13,7 +14,7 @@
   }
 
   th {
-    background-color: #f2f2f2;
+    background-color: #393e46;
     font-weight: bold;
   }
 
@@ -22,7 +23,7 @@
   }
 
   .header-row {
-    background-color: #333;
+    background-color: #393e46;
     color: #fff;
   }
 
@@ -48,15 +49,25 @@
 <script>
 	import { onMount } from 'svelte';
 	import { Container } from '@svelteuidev/core';
-	import SvelteTable from 'svelte-table';
+    import { format } from 'date-fns';
 
 	import { apiClient as api } from '$lib/api';
 
 	let logEntries = [];
 
 	onMount(async () => {
-		logEntries = await api.getLogs();
-		console.log(logEntries)
+		logEntries = (await api.getLogs()).map((logEntry) => {
+            return {
+                timestamp: format(new Date(logEntry.timestamp), 'PPpp'),
+                agent_id: logEntry.agent_id,
+                task_id: logEntry.task_id,
+                action_id: logEntry.action_id,
+                action_type: logEntry.action_type,
+                goal: logEntry.goal,
+                url: logEntry.url,
+                step: logEntry.step
+            };
+        })
 	});
 
 	function redirectToURL(url) {

@@ -105,7 +105,6 @@
 	}
 
 	function handleDispatchClick() {
-		console.log(dispatchAgent);
 		api
 			.dispatchAgentTask(dispatchAgent.id, goal, tasknr)
 			.then((status) => {
@@ -145,7 +144,7 @@
 
 <Modal opened={dispatchModalOpen} title="Set goal for agent" on:close={handleDispatchClose}>
 	<TextInput label="Goal" bind:value={goal} radius="sm" />
-	<TextInput label="Nr Tasks" bind:value={tasknr} radius="sm" />
+	<TextInput label="Number of tasks to spawn" bind:value={tasknr} radius="sm" />
 	<Button class="mt-10" on:click={handleDispatchClick}>Start Task</Button>
 </Modal>
 

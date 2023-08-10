@@ -12,7 +12,6 @@
             return {
                 id: task.id.slice(0, 8),
                 goal: task.goal,
-                seed: task.seed,
                 status: task.status.replace('TaskStatus.', '')
             };
         });
@@ -28,23 +27,21 @@
 	<Container>
 		<Center><h1 class="text-3xl font-bold my-50">Tasks</h1></Center>
 		<Divider class="my-5" />
-        <table class="table w-full table-auto text-center">
-            <thead class="table-header-group">
+        <table class="table table-fixed text-center">
+            <thead class="text-center">
                 <tr>
-                    <th class="px-8">Id</th>
-                    <th class="px-8">Goal</th>
-                    <th class="px-8">Seed</th>
-                    <th class="px-8">Status</th>
+                    <th class="w-32">Id</th>
+                    <th class="w-48">Goal</th>
+                    <th class="w-32">Status</th>
                 </tr>
             </thead>
         </table>
-        <tbody>
+        <tbody class="text-center">
             {#each tasks as task}
                 <tr>
-                    <td class="px-8">{task.id}</td>
-                    <td class="px-8">{task.goal}</td>
-                    <td class="px-8">{task.seed}</td>
-                    <td class="px-8">{task.status}</td>
+                    <td class="w-32">{task.id}</td>
+                    <td class="w-48">{task.goal}</td>
+                    <td class="w-32">{task.status}</td>
                 </tr>
             {/each}
         </tbody>
