@@ -160,14 +160,20 @@ class AgentTask:
         if len(self.next_possible_actions) == 1:
             return self.next_possible_actions[0]
 
+        if len(self.next_possible_actions) == 0:
+            raise Exception("No next actions available. Did scraping fail?")
+
         base_prompt = """
-        I am trying to create synthetic data with LLMs for ecommerce startups.
-        More specifically, I am telling you to act as a consumer with this goal: {goal}
-        You are currently browsing the ecommerce webpage and are presented with these options:
+        Act as a consumer on an ecommerce webpage with this goal: {goal}
+        You are currently browsing the webpage and are presented with these options:
         {options}
 
-        You have previously taken the following actions. You want to choose the best option to buy (with a BUY_NOW action) after a maximum of {steps} steps:
+        You have previously taken the following actions:
         {previous_actions}
+
+        You want to choose the best option to buy (with a BUY_NOW action) after a maximum of {steps} steps.
+        Before taking a BUY_NOW action you should have at least taken {prev_steps} actions.
+        Make sure to look at multiple options before making a BUY_NOW decision so that you make the best, informed decision.
 
         The actions should be taken from the point of view of a user with the following profile:
         - Gender: {gender}
@@ -179,7 +185,7 @@ class AgentTask:
         Tell me which option you are taking by responding with the corresponding action ID only.
         """
         prompt = PromptTemplate.from_template(base_prompt)
-        chain  = LLMChain(llm=OpenAI(max_tokens=-1), prompt=prompt)#, verbose=1)
+        chain  = LLMChain(llm=OpenAI(max_tokens=-1), prompt=prompt, verbose=1)
 
         options          = Action.array_to_json(self.next_possible_actions)
         previous_actions = Action.array_to_json(self.actions_history)
@@ -188,6 +194,7 @@ class AgentTask:
                 {"goal": self.initial_goal,
                  "options": options,
                  "steps": "10",
+                 "prev_steps": "4",
                  "previous_actions": previous_actions,
                  "gender": self.agent.user_profile.gender,
                  "age_from": self.agent.user_profile.age_from,

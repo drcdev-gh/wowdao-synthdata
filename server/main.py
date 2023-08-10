@@ -66,6 +66,10 @@ class LogResponse(BaseModel):
     def from_action_history_entry(cls, action_history_entry: Action.Action,
                                   task: AgentTask.AgentTask):
         # TODO: fix the dummy entries
+        step = 0
+        # Will only be set once all actions have been set
+        if action_history_entry.step != None:
+            step = action_history_entry.step
         return cls(timestamp=int(round(datetime.datetime.now().timestamp())),
                    agent_id=str(task.agent.id),
                    task_id=str(task.id),
@@ -74,7 +78,7 @@ class LogResponse(BaseModel):
                    goal=task.initial_goal,
                    seed=str(task.seed),
                    url=str(action_history_entry.target_url),
-                   step=action_history_entry.step)
+                   step=step)
 
 class TaskResponse(BaseModel):
     id: str
