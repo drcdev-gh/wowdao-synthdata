@@ -76,13 +76,13 @@ TASK_DB: List[agent_task.AgentTask] = {}
 @app.post("/agents", response_model=AgentResponse)
 def create_agent(agent_data: AgentCreate):
     agent_id      = str(uuid.uuid1())
-    scraper       = action_agent.AmazonScraper()
     profile       = action_agent.UserProfile(agent_data.profile.gender,
                                              agent_data.profile.ageFrom,
                                              agent_data.profile.ageTo,
                                              agent_data.profile.location,
-                                             agent_data.profile.interests)
-    new_agent     = action_agent.Agent(agent_id, agent_data.name, profile, scraper)
+                                             agent_data.profile.interests,
+                                             agent_data.profile.description)
+    new_agent     = action_agent.Agent(agent_id, agent_data.name, profile)
     AGENT_DB[agent_id] = new_agent
     return AgentResponse.from_agent(new_agent)
 
@@ -115,12 +115,13 @@ def run_agent_task(task):
 
 
 @app.post("/agents/{agent_id}/dispatch")
-async def dispatch_agent(agent_id: str, agent_task: AgentTaskMetaData, background_tasks: BackgroundTasks):
+async def dispatch_agent(agent_id: str, metadata: AgentTaskMetaData, background_tasks: BackgroundTasks):
     if agent_id not in AGENT_DB:
         raise HTTPException(status_code=404, detail="Agent not found")
 
     agent = AGENT_DB[agent_id]
-    task = agent_task.AgentTask(agent, agent_task.goal, agent_task.seed)
+    # TODO: support different types of scrape source.
+    task = agent_task.AgentTask(agent, action_agent.AmazonScraper(), metadata.goal, metadata.seed)
     TASK_DB[task.id] = task
     background_tasks.add_task(run_agent_task, task)
     return "Successfully started"

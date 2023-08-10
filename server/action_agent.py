@@ -135,13 +135,11 @@ class AmazonScraper(Scraper):
             actions.extend(self.extract_recommendations_from_product_details(page))
             actions.extend(self.extract_checkout_from_product_details(page))
             actions.append(Action(ActionType.BACK_TO_SEARCH_RESULTS, "Go back to search results", self.search_url))
-
         return actions
 
     def extract_products_from_search_page(self, page):
         LIMIT = 5
         products = []
-        print('scraping search page', page)
         content  = self.scrape_and_cache(page)
 
         soup = BeautifulSoup(content, "lxml")
@@ -297,8 +295,7 @@ class AgentStatus(Enum):
 
 
 class Agent:
-    def __init__(self, agent_id, name, user_profile, scraper):
+    def __init__(self, agent_id, name, user_profile):
         self.id = agent_id
         self.name = name
         self.user_profile = user_profile
-        self.scraper: Scraper = scraper

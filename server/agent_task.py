@@ -1,4 +1,5 @@
 import enum
+import logging
 import uuid
 
 from langchain import LLMChain
@@ -7,6 +8,8 @@ from langchain.prompts import PromptTemplate
 import sqlite3
 
 from action_agent import Action, ActionType, Scraper, Agent
+
+logger = logging.getLogger('uvicorn')
 
 
 class TaskStatus(enum.Enum):
@@ -44,13 +47,13 @@ class AgentTask:
 
         task_logs = []
         for action in self.actions_history:
-            task_logs.append((self.agent.id,
-                              self.id,
+            task_logs.append((str(self.agent.id),
+                              str(self.id),
                               str(action.action_id),
                               str(action.action_type),
                               str(action.context),
                               str(action.target_url)))
-        c.executemany("INSERT INTO logs(agent_id, task_id, action_id, action_type, context, target_url) VALUES (?, ?, ?, ?, ?)",
+        c.executemany("INSERT INTO logs(agent_id, task_id, action_id, action_type, context, target_url) VALUES (?, ?, ?, ?, ?, ?)",
                       task_logs)
         conn.commit()
         conn.close()
@@ -63,7 +66,7 @@ class AgentTask:
 
         while True:
             next_action = self.choose_from_next_actions()
-            print(f"Agent: {self.agent_id} action: {str(next_action)}")
+            logger.info(f"Agent: {self.agent.id} Task: {self.id} Action: {str(next_action)}")
 
             if next_action is not None:
                 #print(next_action.to_json())
@@ -73,8 +76,8 @@ class AgentTask:
                 self.next_possible_actions = self.scraper.scrape_page_into_possible_actions(next_action.target_url)
                 #print(Action.array_to_json(self.next_possible_actions))
             else:
-                print(f"Agent: {str(self.user_profile)} FINISHED with {str(next_action.action_type)}")
                 break
+        logger.info(f'Task {self.id} finished')
 
         self.save_history()
         self.status = TaskStatus.FINISHED
@@ -96,7 +99,7 @@ class AgentTask:
         - Gender: {gender}
         - Age Range: {age_from} - {age_to}
         - Location: {location}
-        - Interest: {interest}
+        - Interests: {interests}
 
         Please think carefully how users with different profiles interact with the platform when making e-commerce purchases.
         Tell me which option you are taking by responding with the corresponding action ID only.
@@ -108,11 +111,15 @@ class AgentTask:
         previous_actions = Action.array_to_json(self.actions_history)
 
         result = chain.run(
-                {"goal":self.initial_goal, "options":options,
-                "steps":"10","previous_actions":previous_actions,
-                "gender":self.user_profile.gender,
-                "age_from":self.user_profile.age_from, "age_to":self.user_profile.age_to,
-                "location":self.user_profile.location, "interest":self.user_profile.interest})
+                {"goal": self.initial_goal,
+                 "options": options,
+                 "steps": "10",
+                 "previous_actions": previous_actions,
+                 "gender": self.agent.user_profile.gender,
+                 "age_from": self.agent.user_profile.age_from,
+                 "age_to": self.agent.user_profile.age_to,
+                 "location": self.agent.user_profile.location,
+                 "interests": ", ".join(self.agent.user_profile.interests)})
 
         return self.find_next_action_by_id(result)
 
