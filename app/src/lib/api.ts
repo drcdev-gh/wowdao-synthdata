@@ -16,6 +16,25 @@ export interface Agent {
 	profile: Profile;
 }
 
+export interface Log {
+    timestamp: number;
+    agent_id: string;
+    task_id: string;
+    action_id: string;
+    action_type: string;
+    goal: string;
+    seed: string;
+    url: string;
+    step: number;
+}
+
+export interface Task {
+    id: string;
+    goal: string;
+    seed: string;
+    status: string;
+}
+
 export class ApiClient {
 	constructor(private baseUrl: string) {
 		this.baseUrl = baseUrl;
@@ -40,10 +59,6 @@ export class ApiClient {
 		return fetch(`${this.baseUrl}/agents/${id}`).then((res) => res.json());
 	}
 
-	async getAgentLogs(id: string) {
-		return fetch(`${this.baseUrl}/agents/${id}/logs`).then((res) => res.json());
-	}
-
 	async deleteAgent(id: string) {
 		return fetch(`${this.baseUrl}/agents/${id}`, {
 			method: 'DELETE'
@@ -61,6 +76,14 @@ export class ApiClient {
             })
 		}).then((res) => res.text());
 	}
+
+    async getLogs(): Promise<Log[]> {
+        return fetch(`${this.baseUrl}/logs`).then((res) => res.json());
+    }
+
+    async getTasks(): Promise<Task[]> {
+        return fetch(`${this.baseUrl}/tasks`).then((res) => res.json());
+    }
 }
 
 export const apiClient = new ApiClient(PUBLIC_API_BASE_URL);
