@@ -111,7 +111,7 @@ class AgentTask:
                 INSERT INTO logs (agent_id, task_id, action_id, action_type, context, target_url, step)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
-                str(self.agent.id), str(self.id), str(action.action_id), str(action.action_type.value), str(action.context), str(action.target_url), step
+                str(self.agent.id), str(self.id), str(action.action_id), str(action.action_type), str(action.context), str(action.target_url), step
             ))
             conn.commit()
             # TODO: This is really ugly and should be somewhere else, but I'm too lazy
