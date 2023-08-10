@@ -174,6 +174,7 @@ class AgentTask:
         You want to choose the best option to buy (with a BUY_NOW action) after a maximum of {steps} steps.
         Before taking a BUY_NOW action you should have at least taken {prev_steps} actions.
         Make sure to look at multiple options before making a BUY_NOW decision so that you make the best, informed decision.
+        To re-iterate: Take between {prev_steps} and {steps} actions.
 
         The actions should be taken from the point of view of a user with the following profile:
         - Gender: {gender}
@@ -185,7 +186,7 @@ class AgentTask:
         Tell me which option you are taking by responding with the corresponding action ID only.
         """
         prompt = PromptTemplate.from_template(base_prompt)
-        chain  = LLMChain(llm=OpenAI(max_tokens=-1), prompt=prompt, verbose=1)
+        chain  = LLMChain(llm=OpenAI(max_tokens=-1, temperature=0.3), prompt=prompt, verbose=1)
 
         options          = Action.array_to_json(self.next_possible_actions)
         previous_actions = Action.array_to_json(self.actions_history)
