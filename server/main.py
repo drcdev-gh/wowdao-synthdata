@@ -192,6 +192,7 @@ def restore_instances():
     c.execute('''
     SELECT agents.id, agents.name, user_profiles.gender, user_profiles.age_from,
            user_profiles.age_to, user_profiles.location, user_profiles.interests,
+           user_profiles.description,
            agent_tasks.id, agent_tasks.initial_goal, agent_tasks.status
         FROM agents
         JOIN user_profiles ON agents.user_profile_id = user_profiles.id
@@ -199,9 +200,9 @@ def restore_instances():
     ''')
     rows = c.fetchall()
     for row in rows:
-        agent_id, agent_name, gender, age_from, age_to, location, interests_str, agent_task_id, initial_goal,status = row
+        agent_id, agent_name, gender, age_from, age_to, location, interests_str, description, agent_task_id, initial_goal,status = row
         interests = interests_str.split(', ')
-        user_profile = UserProfile.UserProfile(gender, age_from, age_to, location, interests)
+        user_profile = UserProfile.UserProfile(gender, age_from, age_to, location, interests, description)
         agent = Agent.Agent(agent_id, agent_name, user_profile)
 
         if agent_task_id:
