@@ -162,13 +162,12 @@ class AgentTask:
         You are currently browsing the webpage and are presented with these options:
         {options}
 
-        You have previously taken the following actions:
+        You have taken {prev_action_count} previous actions so far:
         {previous_actions}
 
         You want to choose the best option to buy (with a BUY_NOW action) after a maximum of {steps} steps.
         Before taking a BUY_NOW action you should have at least taken {prev_steps} actions.
         Make sure to look at multiple options before making a BUY_NOW decision so that you make the best, informed decision.
-        To re-iterate: Take between {prev_steps} and {steps} actions.
 
         The actions should be taken from the point of view of a user with the following profile:
         - Gender: {gender}
@@ -177,6 +176,7 @@ class AgentTask:
         - Interests: {interests}
 
         Please think carefully how users with different profiles interact with the platform when making e-commerce purchases.
+        To re-iterate: Take between {prev_steps} and {steps} actions.
         Tell me which option you are taking by responding with the corresponding action ID. You should only reply with ONE action id, no other characters or words.
         """
         prompt = PromptTemplate.from_template(base_prompt)
@@ -190,6 +190,7 @@ class AgentTask:
                  "options": options,
                  "steps": "10",
                  "prev_steps": "4",
+                 "prev_action_count": str(len(self.actions_history)),
                  "previous_actions": previous_actions,
                  "gender": self.agent.user_profile.gender,
                  "age_from": self.agent.user_profile.age_from,
