@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Center, Container, Divider } from '@svelteuidev/core';
+    import FaRegCheckCircle from 'svelte-icons/fa/FaRegCheckCircle.svelte'
+    import FaMinusCircle from 'svelte-icons/fa/FaMinusCircle.svelte'
+    import { Circle, Circle2, Circle3 } from 'svelte-loading-spinners';
 	import { apiClient as api } from '$lib/api';
 	import type { Task } from '$lib/api';
 
@@ -31,6 +34,11 @@
     th, td {
         padding: 10px;
     }
+
+    .icons {
+        width: 32px;
+        height: 32px;
+    }
 </style>
 
 <svelte:head>
@@ -45,9 +53,9 @@
         <table class="table table-fixed text-left border-collapse text-sm border-solid border w-full">
             <thead>
                 <tr>
-                    <th class="w-32">Id</th>
+                    <th class="w-32">Task Id</th>
                     <th class="w-48">Goal</th>
-                    <th class="w-32">Status</th>
+                    <th class="w-8">Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -55,7 +63,23 @@
                     <tr>
                         <td class="w-32">{task.id}</td>
                         <td class="w-48">{task.goal}</td>
-                        <td class="w-32">{task.status}</td>
+                        <td class="w-8">
+                            {#if task.status === 'FINISHED'}
+                                <div class="icons">
+                                    <FaRegCheckCircle/>
+                                </div>
+                            {:else if task.status === 'IN_PROGRESS'}
+                                <div class="icons">
+                                    <Circle size={32}/>
+                                </div>
+                            {:else if task.status === 'NOT_STARTED'}
+                                <div class="icons">
+                                    <FaMinusCircle/>
+                                </div>
+                            {:else}
+                                {task.status}
+                            {/if}
+                        </td>
                     </tr>
                 {/each}
             </tbody>

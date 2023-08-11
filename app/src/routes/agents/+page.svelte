@@ -171,32 +171,59 @@
 	<Button on:click={handleCreate}>Create</Button>
 </Modal>
 
-<section class="flex flex-col justify-center grow">
+<style>
+    table, th, td {
+        border: 1px solid #ccc;
+        font-size: 1em;
+    }
+
+    th {
+        background-color: #393e46;
+        color: #fff;
+    }
+    th, td {
+        padding: 10px;
+    }
+
+    .age {
+        width: 100px;
+    }
+
+    .viewport {
+        width: 1080px;
+    }
+
+</style>
+
+<section class="flex">
 	<Container>
-		<Button on:click={toggleOpen}>Create Agent</Button>
+        <div class="flex flex-row">
+            <h1 class="text-3xl font-bold">Agents</h1>
+            <Button class="ml-auto" on:click={toggleOpen}>Create Agent</Button>
+        </div>
 		<Divider class="my-5" />
-		<table class="table-auto text-center">
+		<table class="table-fixed text-center">
 			<thead>
                 <tr>
                     <th class="px-8">Name</th>
                     <th class="px-8">Gender</th>
-                    <th class="px-8">Age</th>
+                    <th class="age">Age</th>
                     <th class="px-8">Location</th>
                     <th class="px-8">Interests</th>
                     <th class="px-8">Description</th>
-                    <th class="px-10">New Task</th>
+                    <th class="px-16">New Task</th>
                 </tr>
 			</thead>
 			<tbody>
 				{#each $agents as agent}
 					<tr>
-						<td class="px-5">{agent.name}</td>
-						<td class="px-5">{agent.profile.gender}</td>
-						<td class="px-5">{agent.profile.ageFrom} - {agent.profile.ageTo}</td>
+						<td>{agent.name}</td>
+						<td>{agent.profile.gender}</td>
+						<td>{agent.profile.ageFrom} - {agent.profile.ageTo}</td>
 						<td>{agent.profile.location}</td>
 						<td>{agent.profile.interests.join(', ')}</td>
 						<td>{agent.profile.description}</td>
-						<td class="flex justify-center">
+						<td>
 							<Button on:click={() => handleDispatchToggle(agent)}>New Task</Button>
 						</td>
 					</tr>

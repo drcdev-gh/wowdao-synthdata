@@ -59,6 +59,7 @@ class Scraper:
             'Accept-Language': 'en-US,en;q=0.9'
         }
         req      = Request(url, headers=headers)
+        req.set_proxy('139.162.125.224:3128', 'http')
         response = urlopen(req)
         if response:
             response_content = response.read()
