@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-	<title>WOWDAO - FakeAgent</title>
+	<title>Botify</title>
 	<meta name="description" content="Fake ChatGPT agent navigation job dispatcher." />
 </svelte:head>
 
@@ -16,6 +16,7 @@
 </style>
 
 <section class="flex flex-col justify-center items-center grow">
+    <h1 class="my-20 text-4xl font-bold">Botify</h1>
 	<div class="logo">
 		<span class="">
 			<picture>
